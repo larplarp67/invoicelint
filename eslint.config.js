@@ -15,6 +15,9 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
+    rules: {
+      '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
+    },
   },
   {
     files: ['**/*.js'],
@@ -40,7 +43,17 @@ export default tseslint.config(
       'no-restricted-globals': [
         'error',
         { name: 'process', message: 'The core must stay browser-safe.' },
-        { name: 'Buffer', message: 'The core must stay browser-safe.' },
+        ...[
+          'Buffer',
+          '__dirname',
+          '__filename',
+          'require',
+          'module',
+          'exports',
+          'global',
+          'setImmediate',
+          'clearImmediate',
+        ].map((name) => ({ name, message: 'The core must stay browser-safe.' })),
       ],
     },
   },

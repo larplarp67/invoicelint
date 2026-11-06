@@ -1,5 +1,5 @@
 import { Command, CommanderError } from 'commander';
-import { VERSION } from './index.js';
+import { VERSION } from './index.ts';
 
 /** Exit codes: 0 = no issues, 1 = issues found, 2 = usage error. */
 export const EXIT = { OK: 0, ISSUES: 1, USAGE: 2 } as const;

@@ -1,7 +1,19 @@
 /**
  * invoicelint public API.
  *
- * Phase 1 scaffold: only the version is exported. `validate()` arrives with the
- * engine in later phases.
+ * `validate()` arrives with the engine in a later phase.
  */
 export const VERSION = '0.0.0';
+
+export * from './model.ts';
+export {
+  type Cents,
+  type ParseResult,
+  type Rounding,
+  decimalToScaled,
+  formatMoney,
+  multiplyCents,
+  parseDecimal,
+  parseMoney,
+  percentOf,
+} from './money.ts';

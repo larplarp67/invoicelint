@@ -34,6 +34,44 @@ I found no current CRA guidance that settles it. GST/HST Memorandum 8.4 (August 
 
 **Proposal:** keep tax-inclusive, as the plan says. It is also the conservative choice for a linter: tax-inclusive puts borderline invoices into the higher tier, so the tool asks for more information, not less. Record it in the tier rule's metadata as an interpretation, and expose `tierBasis: 'incl-tax' | 'excl-tax'` as an option.
 
+## Model
+
+### 2026-11-07: Fields that rules check are optional in the schema
+
+The Phase 2 spec had `supplier.name`, `issueDate` and `invoiceNumber` as required. That would turn a missing supplier name or date into a parse error, and the tier-1 ITC rules could never report it with its citation. The maintainer chose to make them optional. Only `total` is required. `supplier` defaults to `{}`, and `lines` and `taxes` default to `[]`.
+
+### 2026-11-07: Money as integer cents (`number`, not `bigint`)
+
+Amounts are stored as `number` cents, checked with `Number.isSafeInteger` (up to about $90 trillion). `bigint` would make the parsed invoice impossible to `JSON.stringify` and can't be expressed in JSON Schema. Math that multiplies (rates, quantities) converts to `BigInt` internally, so nothing is ever computed with fractional floats.
+
+### 2026-11-07: Sub-cent amounts are rejected, not rounded
+
+`"12.345"` and float noise such as `0.1 + 0.2` are parse errors. Rounding silently would hide producer bugs and could flip a tier. Trailing zeros (`"12.340"`) are fine. Known limitation: real invoices sometimes show sub-cent **unit prices** (fuel, utilities). If that matters, a later change can give `unitPrice` a finer unit.
+
+### 2026-11-07: Accepted money formats
+
+The accepted forms are an optional `-`, an optional `$`, digits with optional comma grouping in groups of three, and `.` as the decimal point. French-Canadian formatting (`1 234,56`) is **not** accepted in the canonical JSON because a comma is ambiguous between grouping and decimal. Parsers for human-facing formats (CSV, PDF) should normalize before mapping.
+
+### 2026-11-07: Rates and quantities as normalized decimal strings
+
+`rate: 13` becomes `"13"`, and `quantity: "2.50"` becomes `"2.5"`. Strings keep values like 9.975 exact. Rates are in **percent** (0–100, up to 4 decimals). A producer sending fractions (`0.13`) would get a 0.13% rate, which the Phase 3 rate check will flag.
+
+### 2026-11-07: Rounding default
+
+Tax math rounds exact half-cents **away from zero** by default, with banker's rounding (`half-even`) available. I have not yet found a primary source for a CRA-mandated rounding method, so Phase 3 will check tax amounts within a configurable tolerance rather than demand an exact match.
+
+### 2026-11-07: Unknown properties are stripped
+
+Extra properties are ignored rather than rejected, so producers can include their own fields. A misspelled required field still fails as missing.
+
+### 2026-11-07: JSON Schema via zod 4, not `zod-to-json-schema`
+
+The spec named `zod-to-json-schema`. That package was deprecated in November 2025 and only converts zod 3-style schemas. Its README directs users to zod 4's native `z.toJSONSchema()`, which is what we use (`io: 'input'`, so the schema describes what callers send). A test fails if `schema/invoice.schema.json` is out of date. Regenerate it with `pnpm schema`.
+
+### 2026-11-07: `.ts` import specifiers
+
+Source files import each other with `.ts` extensions (`allowImportingTsExtensions`, `erasableSyntaxOnly`). Node 22.18+ can then run `scripts/generate-schema.ts` directly with no extra loader. tsup bundles the published output, so consumers never see `.ts` specifiers.
+
 ## Interpretation notes (s. 3 → model)
 
 - **Tier basis.** See Q4. The tool defaults to the total including tax. This is an interpretation, not a verified CRA position.

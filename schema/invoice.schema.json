@@ -1,0 +1,231 @@
+{
+  "$id": "https://raw.githubusercontent.com/larplarp67/invoicelint/main/schema/invoice.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "invoiceNumber": {
+      "description": "Invoice number.",
+      "type": "string"
+    },
+    "issueDate": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+      "description": "Invoice date. ISO 8601 calendar date (YYYY-MM-DD)."
+    },
+    "taxPaidDate": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$",
+      "description": "Date tax was paid or became payable. Used when no invoice is issued (e.g. a receipt). ISO 8601 calendar date (YYYY-MM-DD)."
+    },
+    "currency": {
+      "default": "CAD",
+      "description": "ISO 4217 currency code.",
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "supplier": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Supplier name or the name under which it does business.",
+          "type": "string"
+        },
+        "gstHstNumber": {
+          "description": "GST/HST registration number: 9-digit BN, or BN + \"RT\" + 4 digits (e.g. 123456789RT0001).",
+          "type": "string"
+        },
+        "province": {
+          "type": "string",
+          "enum": [
+            "AB",
+            "BC",
+            "MB",
+            "NB",
+            "NL",
+            "NS",
+            "NT",
+            "NU",
+            "ON",
+            "PE",
+            "QC",
+            "SK",
+            "YT"
+          ],
+          "description": "Canadian province or territory (two-letter postal code)."
+        },
+        "address": {
+          "description": "Supplier address, free text.",
+          "type": "string"
+        }
+      },
+      "description": "The supplier (seller)."
+    },
+    "intermediary": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Intermediary name or the name under which it does business.",
+          "type": "string"
+        },
+        "gstHstNumber": {
+          "description": "Intermediary GST/HST registration number.",
+          "type": "string"
+        }
+      },
+      "description": "An intermediary in respect of the supply. SOR/91-45 s. 3 accepts the intermediary's name and registration number instead of the supplier's."
+    },
+    "buyer": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Recipient's name, or its duly authorized agent's or representative's name.",
+          "type": "string"
+        },
+        "tradingName": {
+          "description": "Name under which the recipient does business.",
+          "type": "string"
+        }
+      },
+      "description": "The recipient (buyer)."
+    },
+    "lines": {
+      "description": "The supplies on the invoice.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "description": "Description of the supply.",
+            "type": "string"
+          },
+          "quantity": {
+            "description": "Quantity. Exact decimal, up to 6 decimal places.",
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "unitPrice": {
+            "description": "Price per unit. Number or decimal string (e.g. 1234.56 or \"1,234.56\"); at most 2 decimal places.",
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "lineTotal": {
+            "description": "Line amount. Number or decimal string (e.g. 1234.56 or \"1,234.56\"); at most 2 decimal places.",
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "taxStatus": {
+            "type": "string",
+            "enum": [
+              "taxable",
+              "zero-rated",
+              "exempt"
+            ],
+            "description": "GST/HST status of the supply."
+          }
+        },
+        "required": [
+          "lineTotal",
+          "taxStatus"
+        ],
+        "description": "One supply (invoice line)."
+      }
+    },
+    "taxes": {
+      "description": "Taxes charged, one entry per tax.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "GST",
+              "HST",
+              "PST",
+              "QST"
+            ],
+            "description": "Kind of tax."
+          },
+          "rate": {
+            "description": "Tax rate. In percent: 13 means 13%. Up to 4 decimal places.",
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "taxableAmount": {
+            "description": "Amount the tax was computed on. Number or decimal string (e.g. 1234.56 or \"1,234.56\"); at most 2 decimal places.",
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "amount": {
+            "description": "Tax amount. Number or decimal string (e.g. 1234.56 or \"1,234.56\"); at most 2 decimal places.",
+            "type": [
+              "string",
+              "number"
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "amount"
+        ],
+        "description": "A tax charged on the invoice."
+      }
+    },
+    "taxIncludedStatement": {
+      "type": "object",
+      "properties": {
+        "included": {
+          "type": "boolean",
+          "const": true,
+          "description": "Always true when present."
+        },
+        "rate": {
+          "description": "Stated total tax rate. In percent: 13 means 13%. Up to 4 decimal places.",
+          "type": [
+            "string",
+            "number"
+          ]
+        }
+      },
+      "required": [
+        "included"
+      ],
+      "description": "The document states that tax is included in the amounts (e.g. \"total includes HST at 13%\")."
+    },
+    "subtotal": {
+      "description": "Total before tax. Number or decimal string (e.g. 1234.56 or \"1,234.56\"); at most 2 decimal places.",
+      "type": [
+        "string",
+        "number"
+      ]
+    },
+    "total": {
+      "description": "Total amount paid or payable, including tax. Number or decimal string (e.g. 1234.56 or \"1,234.56\"); at most 2 decimal places.",
+      "type": [
+        "string",
+        "number"
+      ]
+    },
+    "paymentTerms": {
+      "description": "Terms of payment, e.g. \"Net 30\".",
+      "type": "string"
+    }
+  },
+  "required": [
+    "total"
+  ],
+  "title": "invoicelint canonical invoice",
+  "description": "The invoice shape invoicelint validates. Amounts are numbers or decimal strings; dates are YYYY-MM-DD."
+}
