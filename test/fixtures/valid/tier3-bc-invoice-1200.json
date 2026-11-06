@@ -1,0 +1,39 @@
+{
+  "$comment": "Tier 3 ($500 or more incl. tax). British Columbia, GST 5% + PST 7%. Adds buyer name, terms of payment and a description of each supply. Fictional parties; synthetic Luhn-valid BN.",
+  "invoiceNumber": "2026-0419",
+  "issueDate": "2026-05-20",
+  "currency": "CAD",
+  "supplier": {
+    "name": "Coastal Ergonomics Ltd.",
+    "gstHstNumber": "731059283RT0001",
+    "province": "BC",
+    "address": "200 Example Ave, Vancouver BC V6B 0A1"
+  },
+  "buyer": {
+    "name": "Northwind Analytics Inc.",
+    "tradingName": "Northwind"
+  },
+  "lines": [
+    {
+      "description": "Standing desk, model SD-200, oak top",
+      "quantity": 1,
+      "unitPrice": "899.00",
+      "lineTotal": "899.00",
+      "taxStatus": "taxable"
+    },
+    {
+      "description": "Dual monitor arm, model MA-2",
+      "quantity": 1,
+      "unitPrice": "172.43",
+      "lineTotal": "172.43",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    { "type": "GST", "rate": 5, "taxableAmount": "1071.43", "amount": "53.57" },
+    { "type": "PST", "rate": 7, "taxableAmount": "1071.43", "amount": "75.00" }
+  ],
+  "subtotal": "1071.43",
+  "total": "1200.00",
+  "paymentTerms": "Net 30"
+}
