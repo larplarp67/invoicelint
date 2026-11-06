@@ -72,6 +72,20 @@ The spec named `zod-to-json-schema`. That package was deprecated in November 202
 
 Source files import each other with `.ts` extensions (`allowImportingTsExtensions`, `erasableSyntaxOnly`). Node 22.18+ can then run `scripts/generate-schema.ts` directly with no extra loader. tsup bundles the published output, so consumers never see `.ts` specifiers.
 
+## Registration numbers
+
+### 2026-11-07: Luhn check digit, matching python-stdnum
+
+The CRA does not publish a check-digit algorithm for the BN. I found no CRA page describing one. The 9th digit behaves as a Luhn (mod 10) check digit, and `validateRegistrationNumber` matches python-stdnum's [`stdnum.ca.bn`](https://github.com/arthurdejong/python-stdnum/blob/master/stdnum/ca/bn.py), which runs `luhn.validate` on the first 9 digits. Passing means the number is well-formed, not that it is registered; only the CRA GST/HST Registry can confirm that, and it has no public API. Known Luhn blind spot: swapping adjacent `0` and `9` is not detected (covered by a test).
+
+### 2026-11-07: Bare 9-digit BN is structurally valid
+
+Per the Phase 2 spec, a 9-digit BN alone passes the format check, and any program other than `RT` is `wrong-program`. Whether an invoice showing only the BN (no `RT0001`) satisfies s. 3(b)(i) is left to a Phase 3 rule.
+
+### 2026-11-07: Split on the program letters, not fixed positions
+
+If characters 10–11 are letters, the number is split there. Otherwise it is split at the first two letters after a run of digits. A BN with a missing digit (`75761092RT0001`) therefore reports `length`, instead of a cascade of program and reference errors from shifted characters.
+
 ## Interpretation notes (s. 3 → model)
 
 - **Tier basis.** See Q4. The tool defaults to the total including tax. This is an interpretation, not a verified CRA position.

@@ -19,3 +19,11 @@ export {
 } from './money.ts';
 export type { Issue, Severity } from './types.ts';
 export { PARSE, type JsonParseResult, formatPath, parseJsonInvoice } from './parsers/json.ts';
+export {
+  GST_HST_PROGRAM,
+  type RegistrationNumberResult,
+  type RegistrationProblem,
+  luhnValid,
+  normalize as normalizeRegistrationNumber,
+  validateRegistrationNumber,
+} from './packs/ca-gst-hst/bn.ts';
