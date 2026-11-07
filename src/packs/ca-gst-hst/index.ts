@@ -5,6 +5,7 @@ import type { RulePack } from '../types.ts';
 import { type CaContext, createCaContext } from './context.ts';
 import { bnRules } from './rules/bn.ts';
 import { itcRules } from './rules/itc.ts';
+import { mathRules } from './rules/math.ts';
 import { currencyNotCad, thresholdsChanged, tierDetected } from './rules/tier.ts';
 
 export const caGstHstPack: RulePack<CaContext> = {
@@ -15,7 +16,7 @@ export const caGstHstPack: RulePack<CaContext> = {
   // should look at currency, supplier province and registration number.
   appliesTo: () => true,
   createContext: createCaContext,
-  rules: [tierDetected, thresholdsChanged, currencyNotCad, ...itcRules, ...bnRules],
+  rules: [tierDetected, thresholdsChanged, currencyNotCad, ...itcRules, ...bnRules, ...mathRules],
 };
 
 export type { CaContext } from './context.ts';

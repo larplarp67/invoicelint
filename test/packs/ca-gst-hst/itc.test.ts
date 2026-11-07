@@ -95,7 +95,12 @@ describe('CA-ITC-010 registration number of the party named', () => {
 
 describe('CA-ITC-011 tax disclosure', () => {
   it('warns when neither a GST/HST amount nor a tax-included statement is shown', () => {
-    const report = check({ ...tier2, taxes: [], subtotal: '250.00' });
+    const report = check({
+      ...tier2,
+      taxes: [],
+      lines: [{ description: 'Printing', lineTotal: '250.00' }],
+      subtotal: '250.00',
+    });
     expect(findings(report)).toEqual(['CA-ITC-011']);
   });
 
