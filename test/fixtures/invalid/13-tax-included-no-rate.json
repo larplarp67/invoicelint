@@ -1,0 +1,27 @@
+{
+  "$comment": "$300.00 tax-included invoice that says tax is included but not at what rate. Fictional parties; synthetic Luhn-valid GST/HST numbers.",
+  "$expect": {
+    "findings": ["CA-ITC-012"],
+    "infos": ["CA-MATH-002"]
+  },
+  "invoiceNumber": "INV-2001",
+  "issueDate": "2026-04-02",
+  "currency": "CAD",
+  "supplier": {
+    "name": "Maple Leaf Printing Inc.",
+    "gstHstNumber": "812345676RT0001",
+    "province": "ON",
+    "address": "100 Example St, Toronto ON M5V 0A1"
+  },
+  "lines": [
+    {
+      "description": "Design consultation, 3 hours",
+      "lineTotal": "300.00"
+    }
+  ],
+  "taxes": [],
+  "total": "300.00",
+  "taxIncludedStatement": {
+    "included": true
+  }
+}

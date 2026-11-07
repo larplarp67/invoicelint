@@ -1,0 +1,38 @@
+{
+  "$comment": "Complete invoice dated 2016-11-15, before the rate table starts (2017-01-01) and before the 2021 threshold change. Infos only. Fictional parties; synthetic Luhn-valid GST/HST numbers.",
+  "$expect": {
+    "findings": [],
+    "infos": ["CA-RATE-003", "CA-TIER-002"]
+  },
+  "invoiceNumber": "INV-2001",
+  "issueDate": "2016-11-15",
+  "currency": "CAD",
+  "supplier": {
+    "name": "Maple Leaf Printing Inc.",
+    "gstHstNumber": "812345676RT0001",
+    "province": "ON",
+    "address": "100 Example St, Toronto ON M5V 0A1"
+  },
+  "lines": [
+    {
+      "description": "Business cards, 500 pcs",
+      "lineTotal": "150.00",
+      "taxStatus": "taxable"
+    },
+    {
+      "description": "Letterhead, 250 sheets",
+      "lineTotal": "71.24",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "221.24",
+      "amount": "28.76"
+    }
+  ],
+  "subtotal": "221.24",
+  "total": "250.00"
+}

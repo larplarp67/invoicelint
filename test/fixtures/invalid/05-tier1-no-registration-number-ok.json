@@ -1,0 +1,32 @@
+{
+  "$comment": "$99.99 total (tier 1) with no GST/HST number. Tier 1 does not need one, so CA-ITC-010 must NOT fire. Fictional parties; synthetic Luhn-valid GST/HST numbers.",
+  "$expect": {
+    "findings": [],
+    "tier": 1
+  },
+  "invoiceNumber": "INV-2001",
+  "issueDate": "2026-04-02",
+  "currency": "CAD",
+  "supplier": {
+    "name": "Maple Leaf Printing Inc.",
+    "province": "ON",
+    "address": "100 Example St, Toronto ON M5V 0A1"
+  },
+  "lines": [
+    {
+      "description": "Toner cartridge, colour",
+      "lineTotal": "88.49",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "88.49",
+      "amount": "11.50"
+    }
+  ],
+  "subtotal": "88.49",
+  "total": "99.99"
+}

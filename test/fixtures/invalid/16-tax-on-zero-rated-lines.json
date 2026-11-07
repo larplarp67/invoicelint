@@ -1,0 +1,32 @@
+{
+  "$comment": "HST charged although every line is marked zero-rated. Fictional parties; synthetic Luhn-valid GST/HST numbers.",
+  "$expect": {
+    "findings": ["CA-MATH-004"]
+  },
+  "invoiceNumber": "INV-2001",
+  "issueDate": "2026-04-02",
+  "currency": "CAD",
+  "supplier": {
+    "name": "Maple Leaf Printing Inc.",
+    "gstHstNumber": "812345676RT0001",
+    "province": "ON",
+    "address": "100 Example St, Toronto ON M5V 0A1"
+  },
+  "lines": [
+    {
+      "description": "Basic groceries: milk, bread, eggs",
+      "lineTotal": "200.00",
+      "taxStatus": "zero-rated"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "200.00",
+      "amount": "26.00"
+    }
+  ],
+  "subtotal": "200.00",
+  "total": "226.00"
+}

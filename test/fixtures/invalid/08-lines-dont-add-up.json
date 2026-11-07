@@ -1,0 +1,37 @@
+{
+  "$comment": "Lines add up to $200.00 but the subtotal says $210.00. Fictional parties; synthetic Luhn-valid GST/HST numbers.",
+  "$expect": {
+    "findings": ["CA-MATH-001"]
+  },
+  "invoiceNumber": "INV-2001",
+  "issueDate": "2026-04-02",
+  "currency": "CAD",
+  "supplier": {
+    "name": "Maple Leaf Printing Inc.",
+    "gstHstNumber": "812345676RT0001",
+    "province": "ON",
+    "address": "100 Example St, Toronto ON M5V 0A1"
+  },
+  "lines": [
+    {
+      "description": "Business cards, 500 pcs",
+      "lineTotal": "120.00",
+      "taxStatus": "taxable"
+    },
+    {
+      "description": "Envelopes, 500 pcs",
+      "lineTotal": "80.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "210.00",
+      "amount": "27.30"
+    }
+  ],
+  "subtotal": "210.00",
+  "total": "237.30"
+}

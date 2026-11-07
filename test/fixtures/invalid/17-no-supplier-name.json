@@ -1,0 +1,27 @@
+{
+  "$comment": "$45.00 receipt with no supplier or intermediary name. Fictional parties; synthetic Luhn-valid GST/HST numbers.",
+  "$expect": {
+    "findings": ["CA-ITC-001"],
+    "tier": 1
+  },
+  "issueDate": "2026-03-12",
+  "supplier": {
+    "province": "AB"
+  },
+  "lines": [
+    {
+      "description": "Printer ink cartridge, black",
+      "lineTotal": "42.86"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "GST",
+      "rate": 5,
+      "taxableAmount": "42.86",
+      "amount": "2.14"
+    }
+  ],
+  "subtotal": "42.86",
+  "total": "45.00"
+}

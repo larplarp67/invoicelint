@@ -1,0 +1,25 @@
+{
+  "$comment": "$250.00 invoice that shows no GST/HST and no tax-included statement. Fictional parties; synthetic Luhn-valid GST/HST numbers.",
+  "$expect": {
+    "findings": ["CA-ITC-011"],
+    "tier": 2
+  },
+  "invoiceNumber": "INV-2001",
+  "issueDate": "2026-04-02",
+  "currency": "CAD",
+  "supplier": {
+    "name": "Maple Leaf Printing Inc.",
+    "gstHstNumber": "812345676RT0001",
+    "province": "ON",
+    "address": "100 Example St, Toronto ON M5V 0A1"
+  },
+  "lines": [
+    {
+      "description": "Website maintenance, March 2026",
+      "lineTotal": "250.00"
+    }
+  ],
+  "taxes": [],
+  "subtotal": "250.00",
+  "total": "250.00"
+}

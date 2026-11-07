@@ -1,0 +1,32 @@
+{
+  "$comment": "Alberta invoice charging GST at 7% (GST is 5%). Fictional parties; synthetic Luhn-valid GST/HST numbers.",
+  "$expect": {
+    "findings": ["CA-RATE-001"]
+  },
+  "invoiceNumber": "INV-2001",
+  "issueDate": "2026-04-02",
+  "currency": "CAD",
+  "supplier": {
+    "name": "Maple Leaf Printing Inc.",
+    "gstHstNumber": "812345676RT0001",
+    "province": "AB",
+    "address": "200 Example Ave, Calgary AB T2P 0A1"
+  },
+  "lines": [
+    {
+      "description": "Brochure printing, 1,000 copies",
+      "lineTotal": "200.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "GST",
+      "rate": 7,
+      "taxableAmount": "200.00",
+      "amount": "14.00"
+    }
+  ],
+  "subtotal": "200.00",
+  "total": "214.00"
+}

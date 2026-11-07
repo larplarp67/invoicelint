@@ -1,0 +1,36 @@
+{
+  "$comment": "$300.00 invoice mixing an exempt line (marked) with a taxable line whose status is not stated. Fictional parties; synthetic Luhn-valid GST/HST numbers.",
+  "$expect": {
+    "findings": ["CA-ITC-013"]
+  },
+  "invoiceNumber": "INV-2001",
+  "issueDate": "2026-04-02",
+  "currency": "CAD",
+  "supplier": {
+    "name": "Maple Leaf Printing Inc.",
+    "gstHstNumber": "812345676RT0001",
+    "province": "ON",
+    "address": "100 Example St, Toronto ON M5V 0A1"
+  },
+  "lines": [
+    {
+      "description": "Annual membership dues",
+      "lineTotal": "100.00",
+      "taxStatus": "exempt"
+    },
+    {
+      "description": "Consulting, 3 hours",
+      "lineTotal": "176.99"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "176.99",
+      "amount": "23.01"
+    }
+  ],
+  "subtotal": "276.99",
+  "total": "300.00"
+}

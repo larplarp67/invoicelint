@@ -1,0 +1,34 @@
+{
+  "$comment": "$600.00 invoice with no buyer name. Fictional parties; synthetic Luhn-valid GST/HST numbers.",
+  "$expect": {
+    "findings": ["CA-ITC-020"],
+    "tier": 3
+  },
+  "invoiceNumber": "INV-3001",
+  "issueDate": "2026-05-20",
+  "currency": "CAD",
+  "supplier": {
+    "name": "Maple Leaf Printing Inc.",
+    "gstHstNumber": "812345676RT0001",
+    "province": "ON",
+    "address": "100 Example St, Toronto ON M5V 0A1"
+  },
+  "lines": [
+    {
+      "description": "Office chairs, model OC-4, 4 units",
+      "lineTotal": "530.97",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "530.97",
+      "amount": "69.03"
+    }
+  ],
+  "subtotal": "530.97",
+  "total": "600.00",
+  "paymentTerms": "Net 30"
+}
