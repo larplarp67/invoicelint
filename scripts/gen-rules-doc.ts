@@ -36,14 +36,14 @@ export function renderRulesDoc(): string {
     '**Severity policy**',
     '',
     '- **warning**: input tax credit information missing from this document. The law lets that information come from other documents, so a warning never means the invoice is illegal.',
-    '- **error**: data that is wrong: a malformed registration number, math that does not add up, a tax rate that was not in force.',
-    '- **info**: context: the tier detected, or a check that was skipped and why.',
+    '- **error**: something on the invoice is wrong: a GST/HST number with a typo, amounts that do not add up, a tax rate that was not in force on the invoice date.',
+    '- **info**: background: which tier applies, or a check that was skipped and why.',
     '',
-    'A report is `ok` when it has no errors. Warnings do not fail it.',
+    'An invoice passes when it has no errors. Warnings do not make it fail.',
     '',
     '**Tiers** (SOR/91-45 s.3, total including tax, in CAD): tier 1 under $100; tier 2 $100 to $499.99; tier 3 $500 or more. The Tier column shows the lowest tier a rule applies to.',
     '',
-    '| ID | Severity | Tier | Checks | Citation |',
+    '| ID | Severity | Tier | What it checks | Legal source |',
     '| --- | --- | --- | --- | --- |',
   ];
   for (const rule of pack.rules) {
@@ -59,12 +59,34 @@ export function renderRulesDoc(): string {
     '',
     '### GST/HST rate table',
     '',
-    `Source: [${RATES_SOURCE.title}](${RATES_SOURCE.url}), table "${RATES_SOURCE.table}", retrieved ${RATES_SOURCE.retrieved}. Rate checks cover invoices dated ${COVERAGE_FROM} onward.`,
+    `Source: [${RATES_SOURCE.title}](${RATES_SOURCE.url}) (Canada Revenue Agency), table "${RATES_SOURCE.table}", retrieved ${RATES_SOURCE.retrieved}. Rates are checked for invoices dated ${COVERAGE_FROM} onward. "From" is where the transcribed CRA table starts, not when the rate began; an empty "To" means the rate is still in force.`,
     '',
-    '| Jurisdiction | Type | Rate | From | To |',
+    '| Province or territory | Tax | Rate | From | To |',
     '| --- | --- | --- | --- | --- |',
   );
+  // Merge consecutive periods with the same rate so unchanged rates appear once.
+  const merged: {
+    jurisdiction: string;
+    type: string;
+    rate: string;
+    effectiveFrom: string;
+    effectiveTo?: string;
+  }[] = [];
   for (const e of RATE_TABLE) {
+    const last = merged.at(-1);
+    if (
+      last &&
+      last.jurisdiction === e.jurisdiction &&
+      last.type === e.type &&
+      last.rate === e.rate
+    ) {
+      if (e.effectiveTo === undefined) delete last.effectiveTo;
+      else last.effectiveTo = e.effectiveTo;
+    } else {
+      merged.push({ ...e });
+    }
+  }
+  for (const e of merged) {
     out.push(
       `| ${e.jurisdiction} | ${e.type} | ${e.rate}% | ${e.effectiveFrom} | ${e.effectiveTo ?? ''} |`,
     );

@@ -73,7 +73,7 @@ export const rateChecksSkipped = defineRule<CaContext>(
     } else if (!rates.isCovered(date)) {
       report({
         field: dateField,
-        message: `Skipped the GST/HST rate checks: the invoice is dated ${date}, before ${COVERAGE_FROM}, which is earlier than the rate table covers.`,
+        message: `Skipped the GST/HST rate checks: the invoice is dated ${date}, and invoicelint only has rates from ${COVERAGE_FROM} onward.`,
       });
     }
   },

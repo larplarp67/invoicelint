@@ -9,31 +9,31 @@ Canada GST/HST: input tax credit information (SOR/91-45 s.3) and tax math
 **Severity policy**
 
 - **warning**: input tax credit information missing from this document. The law lets that information come from other documents, so a warning never means the invoice is illegal.
-- **error**: data that is wrong: a malformed registration number, math that does not add up, a tax rate that was not in force.
-- **info**: context: the tier detected, or a check that was skipped and why.
+- **error**: something on the invoice is wrong: a GST/HST number with a typo, amounts that do not add up, a tax rate that was not in force on the invoice date.
+- **info**: background: which tier applies, or a check that was skipped and why.
 
-A report is `ok` when it has no errors. Warnings do not fail it.
+An invoice passes when it has no errors. Warnings do not make it fail.
 
 **Tiers** (SOR/91-45 s.3, total including tax, in CAD): tier 1 under $100; tier 2 $100 to $499.99; tier 3 $500 or more. The Tier column shows the lowest tier a rule applies to.
 
-| ID | Severity | Tier | Checks | Citation |
+| ID | Severity | Tier | What it checks | Legal source |
 | --- | --- | --- | --- | --- |
-| CA-TIER-001 | info | all | Information tier detected | SOR/91-45 s.3(a), (b), (c) |
+| CA-TIER-001 | info | all | Which information tier applies | SOR/91-45 s.3(a), (b), (c) |
 | CA-TIER-002 | info | all | Invoice predates the 2021 threshold change | S.C. 2024, c. 15, s. 142(4); ETA s.169(4) |
 | CA-CUR-001 | warning | all | Invoice is not in Canadian dollars | ETA s.159; SOR/91-45 s.3 |
-| CA-ITC-001 | warning | 1+ | Supplier or intermediary name | SOR/91-45 s.3(a)(i) |
+| CA-ITC-001 | warning | 1+ | Supplier name (or an intermediary such as a marketplace) | SOR/91-45 s.3(a)(i) |
 | CA-ITC-002 | warning | 1+ | Invoice date (or date tax was paid) | SOR/91-45 s.3(a)(ii), (iii) |
-| CA-ITC-010 | warning | 2+ | GST/HST registration number of the party named | SOR/91-45 s.3(b)(i) |
+| CA-ITC-010 | warning | 2+ | Supplier's (or intermediary's) GST/HST number | SOR/91-45 s.3(b)(i) |
 | CA-ITC-011 | warning | 2+ | GST/HST charged, or a tax-included statement | SOR/91-45 s.3(b)(iii), (iv) |
 | CA-ITC-012 | warning | 2+ | Total tax rate on a tax-included invoice | SOR/91-45 s.3(b)(iv)(B) |
-| CA-ITC-013 | warning | 2+ | Status of each taxable supply when statuses differ | SOR/91-45 s.3(b)(v) |
+| CA-ITC-013 | warning | 2+ | Taxable items marked as taxable when the invoice mixes tax statuses | SOR/91-45 s.3(b)(v) |
 | CA-ITC-020 | warning | 3 | Buyer name or trading name | SOR/91-45 s.3(c)(ii) |
 | CA-ITC-021 | warning | 3 | Terms of payment | SOR/91-45 s.3(c)(iii) |
-| CA-ITC-022 | warning | 3 | Description sufficient to identify each supply | SOR/91-45 s.3(c)(iv) |
-| CA-BN-001 | error | all | GST/HST number is well-formed (length, characters, check digit) | SOR/91-45 s.3(b)(i) |
-| CA-BN-002 | error | all | Number is a GST/HST (RT) program account | SOR/91-45 s.3(b)(i) |
-| CA-MATH-001 | error | all | Line amounts add up to the subtotal | Arithmetic consistency (no statutory provision) |
-| CA-MATH-002 | error | all | Subtotal plus taxes equals the total | Arithmetic consistency (no statutory provision) |
+| CA-ITC-022 | warning | 3 | A description of each item, specific enough to identify it | SOR/91-45 s.3(c)(iv) |
+| CA-BN-001 | error | all | GST/HST number has the right format and check digit | SOR/91-45 s.3(b)(i) |
+| CA-BN-002 | error | all | Number is a GST/HST number (RT), not another CRA account | SOR/91-45 s.3(b)(i) |
+| CA-MATH-001 | error | all | Line amounts add up to the subtotal | Arithmetic check (not a legal requirement) |
+| CA-MATH-002 | error | all | Subtotal plus taxes equals the total | Arithmetic check (not a legal requirement) |
 | CA-MATH-003 | error | all | Tax amount equals rate × taxable amount | ETA s.165(1), (2) |
 | CA-MATH-004 | warning | all | GST/HST charged when every line is exempt or zero-rated | ETA s.165(1), (3) |
 | CA-RATE-001 | error | all | GST rate is the rate in force (5%) | ETA s.165(1) |
@@ -66,33 +66,21 @@ A report is `ok` when it has no errors. Warnings do not fail it.
 
 ### GST/HST rate table
 
-Source: [GST/HST calculator (and rates)](https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/charge-collect-which-rate/calculator.html), table "GST/HST rates since April 1, 2013", retrieved 2026-11-07. Rate checks cover invoices dated 2017-01-01 onward.
+Source: [GST/HST calculator (and rates)](https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/charge-collect-which-rate/calculator.html) (Canada Revenue Agency), table "GST/HST rates since April 1, 2013", retrieved 2026-11-07. Rates are checked for invoices dated 2017-01-01 onward. "From" is where the transcribed CRA table starts, not when the rate began; an empty "To" means the rate is still in force.
 
-| Jurisdiction | Type | Rate | From | To |
+| Province or territory | Tax | Rate | From | To |
 | --- | --- | --- | --- | --- |
-| AB | GST | 5% | 2016-10-01 | 2025-03-31 |
-| AB | GST | 5% | 2025-04-01 |  |
-| BC | GST | 5% | 2016-10-01 | 2025-03-31 |
-| BC | GST | 5% | 2025-04-01 |  |
-| MB | GST | 5% | 2016-10-01 | 2025-03-31 |
-| MB | GST | 5% | 2025-04-01 |  |
-| NB | HST | 15% | 2016-10-01 | 2025-03-31 |
-| NB | HST | 15% | 2025-04-01 |  |
-| NL | HST | 15% | 2016-10-01 | 2025-03-31 |
-| NL | HST | 15% | 2025-04-01 |  |
-| NT | GST | 5% | 2016-10-01 | 2025-03-31 |
-| NT | GST | 5% | 2025-04-01 |  |
+| AB | GST | 5% | 2016-10-01 |  |
+| BC | GST | 5% | 2016-10-01 |  |
+| MB | GST | 5% | 2016-10-01 |  |
+| NB | HST | 15% | 2016-10-01 |  |
+| NL | HST | 15% | 2016-10-01 |  |
+| NT | GST | 5% | 2016-10-01 |  |
 | NS | HST | 15% | 2016-10-01 | 2025-03-31 |
 | NS | HST | 14% | 2025-04-01 |  |
-| NU | GST | 5% | 2016-10-01 | 2025-03-31 |
-| NU | GST | 5% | 2025-04-01 |  |
-| ON | HST | 13% | 2016-10-01 | 2025-03-31 |
-| ON | HST | 13% | 2025-04-01 |  |
-| QC | GST | 5% | 2016-10-01 | 2025-03-31 |
-| QC | GST | 5% | 2025-04-01 |  |
-| PE | HST | 15% | 2016-10-01 | 2025-03-31 |
-| PE | HST | 15% | 2025-04-01 |  |
-| SK | GST | 5% | 2016-10-01 | 2025-03-31 |
-| SK | GST | 5% | 2025-04-01 |  |
-| YT | GST | 5% | 2016-10-01 | 2025-03-31 |
-| YT | GST | 5% | 2025-04-01 |  |
+| NU | GST | 5% | 2016-10-01 |  |
+| ON | HST | 13% | 2016-10-01 |  |
+| QC | GST | 5% | 2016-10-01 |  |
+| PE | HST | 15% | 2016-10-01 |  |
+| SK | GST | 5% | 2016-10-01 |  |
+| YT | GST | 5% | 2016-10-01 |  |

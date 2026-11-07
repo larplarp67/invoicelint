@@ -47,7 +47,9 @@ describe('CA-BN-002 RT program', () => {
   it('flags a payroll (RP) account', () => {
     const report = check(withNumber('812345676RP0001'));
     expect(findings(report)).toEqual(['CA-BN-002']);
-    expect(byRule(report, 'CA-BN-002')[0]?.message).toMatch(/"RP" program account/);
+    expect(byRule(report, 'CA-BN-002')[0]?.message).toBe(
+      'The supplier\'s number "812345676RP0001" is a payroll account number (code RP), not a GST/HST number. GST/HST numbers have RT after the first 9 digits.',
+    );
   });
 
   it('reports format and program problems separately', () => {

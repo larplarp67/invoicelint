@@ -32,6 +32,15 @@ function shownNumbers(invoice: Invoice): ShownNumber[] {
   return out;
 }
 
+/** CRA program identifiers other than RT, for plain-language messages. */
+const PROGRAM_NAMES: Record<string, string> = {
+  RC: 'corporation income tax',
+  RP: 'payroll',
+  RR: 'registered charity',
+  RZ: 'information return',
+  RM: 'import-export',
+};
+
 const FORMAT_HINT = 'A GST/HST number is 9 digits, then RT and 4 digits (e.g. 123456789 RT 0001).';
 
 const PROBLEM_TEXT: Record<Exclude<RegistrationProblem, 'wrong-program'>, string> = {
@@ -41,11 +50,18 @@ const PROBLEM_TEXT: Record<Exclude<RegistrationProblem, 'wrong-program'>, string
   'bad-reference': 'should end in 4 digits after "RT"',
 };
 
+function describeProgram(program: string): string {
+  const name = PROGRAM_NAMES[program];
+  return name === undefined
+    ? `a CRA account number with the code "${program}"`
+    : `a ${name} account number (code ${program})`;
+}
+
 export const registrationNumberFormat = defineRule<CaContext>(
   {
     id: 'CA-BN-001',
     severity: 'error',
-    title: 'GST/HST number is well-formed (length, characters, check digit)',
+    title: 'GST/HST number has the right format and check digit',
     citation: 'SOR/91-45 s.3(b)(i)',
     fix: "Compare the number with the supplier's records or the CRA GST/HST Registry, and ask for a corrected invoice if it's wrong.",
   },
@@ -68,7 +84,7 @@ export const registrationNumberProgram = defineRule<CaContext>(
   {
     id: 'CA-BN-002',
     severity: 'error',
-    title: 'Number is a GST/HST (RT) program account',
+    title: 'Number is a GST/HST number (RT), not another CRA account',
     citation: 'SOR/91-45 s.3(b)(i)',
     fix: 'Ask the supplier for its GST/HST number: the one with RT after the first 9 digits.',
   },
@@ -78,7 +94,7 @@ export const registrationNumberProgram = defineRule<CaContext>(
       if (!result.problems.includes('wrong-program')) continue;
       report({
         field: shown.field,
-        message: `The ${shown.party}'s number "${shown.value}" is a "${result.program ?? ''}" program account, not a GST/HST account. GST/HST numbers have RT after the first 9 digits.`,
+        message: `The ${shown.party}'s number "${shown.value}" is ${describeProgram(result.program ?? '')}, not a GST/HST number. GST/HST numbers have RT after the first 9 digits.`,
       });
     }
   },

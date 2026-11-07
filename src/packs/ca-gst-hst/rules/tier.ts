@@ -1,20 +1,20 @@
 /** Tier detection and the context notes that go with it. */
 import { defineRule } from '../../types.ts';
 import { type CaContext, dollars } from '../context.ts';
-import { THRESHOLDS_IN_FORCE_FROM, TIER_PARAGRAPH, TIER_RANGE } from '../tier.ts';
+import { THRESHOLDS_IN_FORCE_FROM, TIER_NEEDS, TIER_PARAGRAPH, TIER_RANGE } from '../tier.ts';
 
 export const tierDetected = defineRule<CaContext>(
   {
     id: 'CA-TIER-001',
     severity: 'info',
-    title: 'Information tier detected',
+    title: 'Which information tier applies',
     citation: 'SOR/91-45 s.3(a), (b), (c)',
     fix: 'No action needed. This tells you which information requirements apply.',
   },
   ({ invoice, tier }, report) => {
     report({
       field: 'total',
-      message: `Tier ${tier}: the total of ${dollars(invoice.total)} including tax is ${TIER_RANGE[tier]}, so the requirements of SOR/91-45 s.3${TIER_PARAGRAPH[tier]} apply.`,
+      message: `Tier ${tier}: the total of ${dollars(invoice.total)} including tax is ${TIER_RANGE[tier]}. To support an input tax credit, the documents need ${TIER_NEEDS[tier]} (SOR/91-45 s.3${TIER_PARAGRAPH[tier]}).`,
     });
   },
 );

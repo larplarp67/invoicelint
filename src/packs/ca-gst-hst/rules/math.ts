@@ -9,7 +9,7 @@
 import { defineRule } from '../../types.ts';
 import { type CaContext, allLinesStatedNonTaxable, dollars, isGstHst } from '../context.ts';
 
-const ARITHMETIC = 'Arithmetic consistency (no statutory provision)';
+const ARITHMETIC = 'Arithmetic check (not a legal requirement)';
 
 const sum = (values: readonly number[]): number => values.reduce((a, b) => a + b, 0);
 
@@ -131,7 +131,7 @@ export const taxOnNonTaxableSupplies = defineRule<CaContext>(
     report({
       field: 'taxes',
       message:
-        'GST/HST is charged, but every line is marked exempt or zero-rated, and those supplies carry no GST/HST. Either a line status or the tax is wrong.',
+        'GST/HST is charged, but every line is marked exempt or zero-rated, and those items carry no GST/HST. Either a line status or the tax is wrong.',
     });
   },
 );

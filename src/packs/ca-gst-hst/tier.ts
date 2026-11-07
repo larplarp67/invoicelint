@@ -29,6 +29,13 @@ export function computeTier(totalCents: Cents): Tier {
 /** The paragraph of s.3 that sets each tier's requirements. */
 export const TIER_PARAGRAPH: Record<Tier, string> = { 1: '(a)', 2: '(b)', 3: '(c)' };
 
+/** What each tier needs, in plain words, for the tier message. */
+export const TIER_NEEDS: Record<Tier, string> = {
+  1: "the supplier's name, the date and the total",
+  2: "the supplier's name, the date, the total, the supplier's GST/HST number and the GST/HST charged",
+  3: "the supplier's name, the date, the total, the supplier's GST/HST number, the GST/HST charged, your business name, the payment terms and a description of each item",
+};
+
 export const TIER_RANGE: Record<Tier, string> = {
   1: 'under $100',
   2: 'between $100 and $499.99',

@@ -22,7 +22,7 @@ export const supplierName = defineRule<CaContext>(
   {
     id: 'CA-ITC-001',
     severity: 'warning',
-    title: 'Supplier or intermediary name',
+    title: 'Supplier name (or an intermediary such as a marketplace)',
     citation: 'SOR/91-45 s.3(a)(i)',
     appliesFromTier: 1,
     fix: "Get a document that shows the supplier's name (or the name it does business under) and keep it with this one.",
@@ -64,7 +64,7 @@ export const registrationNumber = defineRule<CaContext>(
   {
     id: 'CA-ITC-010',
     severity: 'warning',
-    title: 'GST/HST registration number of the party named',
+    title: "Supplier's (or intermediary's) GST/HST number",
     citation: 'SOR/91-45 s.3(b)(i)',
     appliesFromTier: 2,
     fix: 'Ask the supplier for its GST/HST number (9 digits, then RT and 4 digits, e.g. 123456789 RT 0001) and keep it with this invoice.',
@@ -135,7 +135,7 @@ export const statusIndication = defineRule<CaContext>(
   {
     id: 'CA-ITC-013',
     severity: 'warning',
-    title: 'Status of each taxable supply when statuses differ',
+    title: 'Taxable items marked as taxable when the invoice mixes tax statuses',
     citation: 'SOR/91-45 s.3(b)(v)',
     appliesFromTier: 2,
     fix: 'If this line is taxable, ask the supplier to mark it as taxable (for example with a tax code). If it is exempt or zero-rated, no change is needed.',
@@ -154,7 +154,7 @@ export const statusIndication = defineRule<CaContext>(
       const label = line.description === undefined ? '' : ` ("${line.description}")`;
       report({
         field: `lines[${i}].taxStatus`,
-        message: `Line ${i + 1}${label} doesn't say whether it is taxable. Other lines on this invoice are exempt or zero-rated, so every taxable supply must be marked as taxable to support an input tax credit.`,
+        message: `Line ${i + 1}${label} isn't marked as taxable or not. At least one other line is marked exempt or zero-rated, so each taxable item must be marked as taxable to support an input tax credit.`,
       });
     });
   },
@@ -237,7 +237,7 @@ export const supplyDescription = defineRule<CaContext>(
   {
     id: 'CA-ITC-022',
     severity: 'warning',
-    title: 'Description sufficient to identify each supply',
+    title: 'A description of each item, specific enough to identify it',
     citation: 'SOR/91-45 s.3(c)(iv)',
     appliesFromTier: 3,
     fix: 'Ask the supplier for a description that identifies what was supplied (for example "Laptop repair, 2 hours" rather than "Services").',
@@ -247,7 +247,7 @@ export const supplyDescription = defineRule<CaContext>(
       report({
         field: 'lines',
         message:
-          "This document doesn't list what was supplied. Invoices of $500 or more need a description of each supply that's specific enough to identify it.",
+          "This document doesn't list what was supplied. Invoices of $500 or more need a description of each item that's specific enough to identify it.",
       });
       return;
     }
@@ -256,13 +256,13 @@ export const supplyDescription = defineRule<CaContext>(
       if (description.length < 3) {
         report({
           field: `lines[${i}].description`,
-          message: `Line ${i + 1} has ${description === '' ? 'no description' : `only "${description}" as a description`}. Invoices of $500 or more need a description of each supply that's specific enough to identify it.`,
+          message: `Line ${i + 1} has ${description === '' ? 'no description' : `only "${description}" as a description`}. Invoices of $500 or more need a description of each item that's specific enough to identify it.`,
         });
       } else if (GENERIC_DESCRIPTIONS.has(normalizeDescription(description))) {
         report({
           field: `lines[${i}].description`,
           severity: 'info',
-          message: `Line ${i + 1} is described only as "${description}", which may not be specific enough to identify the supply.`,
+          message: `Line ${i + 1} is described only as "${description}", which may not be specific enough to identify what was supplied.`,
         });
       }
     });
