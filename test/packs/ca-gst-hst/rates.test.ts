@@ -183,6 +183,24 @@ describe('CA-RATE-002 HST rate', () => {
 });
 
 describe('tax date and rate changes', () => {
+  it('names the payment date as such when it is the earlier date', () => {
+    const report = check({
+      issueDate: '2021-05-03',
+      taxPaidDate: '2016-11-10',
+      supplier: { name: 'S' },
+      taxes: [{ type: 'HST', rate: 13, taxableAmount: '100.00', amount: '13.00' }],
+      subtotal: '100.00',
+      total: '113.00',
+    });
+    expect(byRule(report, 'CA-RATE-003')[0]?.message).toBe(
+      'Skipped the GST/HST rate checks: the tax was paid on 2016-11-10, and invoicelint only has rates from 2017-01-01 onward.',
+    );
+    expect(byRule(report, 'CA-TIER-002')[0]?.message).toMatch(
+      /^The tax was paid on 2016-11-10, before 20 April 2021\./,
+    );
+    expect(byRule(report, 'CA-TIER-002')[0]?.message).not.toContain('dated');
+  });
+
   it.each([
     [{ issueDate: '2025-04-15', taxPaidDate: '2025-01-10' }, '2025-01-10', 'taxPaidDate'],
     [{ issueDate: '2025-01-10', taxPaidDate: '2025-04-15' }, '2025-01-10', 'issueDate'],

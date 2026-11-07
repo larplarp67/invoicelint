@@ -14,7 +14,7 @@
  */
 import type { Invoice } from '../../../model.ts';
 import { type IssueDraft, defineRule } from '../../types.ts';
-import { type CaContext, isGstHst } from '../context.ts';
+import { type CaContext, describeTaxDate, isGstHst } from '../context.ts';
 import { COVERAGE_FROM, PROVINCE_NAMES, type RateChange, type RateType } from '../rates.ts';
 
 const percentList = (rates: readonly string[]): string =>
@@ -116,7 +116,7 @@ export const rateChecksSkipped = defineRule<CaContext>(
     } else if (!rates.isCovered(date)) {
       report({
         field: dateField,
-        message: `Skipped the GST/HST rate checks: the invoice is dated ${date}, and invoicelint only has rates from ${COVERAGE_FROM} onward.`,
+        message: `Skipped the GST/HST rate checks: ${describeTaxDate({ date, dateField })}, and invoicelint only has rates from ${COVERAGE_FROM} onward.`,
       });
     }
   },

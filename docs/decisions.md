@@ -169,7 +169,7 @@ s.3(c)(iv) needs "a description of each supply". An invoice with no lines descri
 ### Severity policy
 
 - **warning**: ITC information missing from this document. Supporting documentation can be spread across documents (s.2), so it is never "illegal".
-- **error**: wrong data: malformed registration number, math that doesn't add up, a rate not in force.
+- **error**: wrong data: malformed registration number, math that doesn't add up, a rate not in force. (Later exception: within the transition window of a rate change, CA-RATE-002 is a warning; see "Tax date and a transition window".)
 - **info**: context and skipped checks.
 
 `report.ok` = no errors. A `--strict` CLI flag (Phase 5) will also fail on warnings. Kept from the spec: **CA-MATH-004** (tax on all-exempt/zero-rated lines) is a warning, because either the statuses or the tax could be the wrong part.

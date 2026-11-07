@@ -1,7 +1,9 @@
 /** Tier detection and the context notes that go with it. */
 import { defineRule } from '../../types.ts';
-import type { CaContext } from '../context.ts';
+import { type CaContext, describeTaxDate } from '../context.ts';
 import { THRESHOLDS_IN_FORCE_FROM, TIER_NEEDS, TIER_PARAGRAPH, TIER_RANGE } from '../tier.ts';
+
+const capitalize = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
 
 export const tierDetected = defineRule<CaContext>(
   {
@@ -31,7 +33,7 @@ export const thresholdsChanged = defineRule<CaContext>(
     if (date === undefined || date >= THRESHOLDS_IN_FORCE_FROM) return;
     report({
       field: dateField,
-      message: `This invoice is dated ${date}, before 20 April 2021. The tier above uses today's $100 and $500 thresholds. If the input tax credit was claimed in a return filed before 20 April 2021, the old $30 and $150 thresholds applied instead.`,
+      message: `${capitalize(describeTaxDate({ date, dateField }))}, before 20 April 2021. The tier above uses today's $100 and $500 thresholds. If the input tax credit was claimed in a return filed before 20 April 2021, the old $30 and $150 thresholds applied instead.`,
     });
   },
 );

@@ -54,6 +54,19 @@ export function taxDate(invoice: Invoice): Pick<CaContext, 'date' | 'dateField'>
   return { date: undefined, dateField: 'issueDate' };
 }
 
+/**
+ * The tax date in words: "the invoice is dated 2025-01-15" or, when the
+ * earlier date is the payment date, "the tax was paid on 2025-01-10".
+ */
+export function describeTaxDate({
+  date,
+  dateField,
+}: Pick<CaContext, 'date' | 'dateField'>): string {
+  return dateField === 'taxPaidDate'
+    ? `the tax was paid on ${date ?? ''}`
+    : `the invoice is dated ${date ?? ''}`;
+}
+
 export function createCaContext(invoice: Invoice, options: EngineOptions): CaContext {
   return {
     invoice,

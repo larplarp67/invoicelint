@@ -9,7 +9,7 @@ Canada GST/HST: input tax credit information (SOR/91-45 s.3) and tax math
 **Severity policy**
 
 - **warning**: input tax credit information missing from this document. The law lets that information come from other documents, so a warning never means the invoice is illegal.
-- **error**: something on the invoice is wrong: a GST/HST number with a typo, amounts that do not add up, a tax rate that was not in force on the invoice date.
+- **error**: something on the invoice is wrong: a GST/HST number with a typo, amounts that do not add up, a tax rate that was not in force on the tax date (within 60 days of a rate change this is a warning instead, since either rate may apply).
 - **info**: background: which tier applies, or a check that was skipped and why.
 
 An invoice passes when it has no errors. Warnings do not make it fail.
