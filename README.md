@@ -45,6 +45,7 @@ Every input format is mapped onto one canonical invoice shape. It's defined with
 - **Money** is a number or a decimal string (`1234.56`, `"1,234.56"`) with at most 2 decimal places. Internally it becomes integer cents; tax math never uses floats.
 - **Rates** are in percent: `13` means 13%.
 - **Dates** are `YYYY-MM-DD`.
+- **`lines[].taxStatus`** records what the document _states_ (`taxable`, `zero-rated`, `exempt`). Leave it out when the document doesn't say: the rules need to tell "not stated" apart from "taxable".
 - Only `total` is required. Fields that the tax rules check (supplier name, registration number, buyer, terms, ...) are optional in the schema, so a missing one is reported as a finding with a legal citation, not a parse error.
 
 ## Rules

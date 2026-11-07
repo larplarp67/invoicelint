@@ -50,6 +50,11 @@ describe('InvoiceSchema', () => {
     expect(invoice.paymentTerms).toBeUndefined();
   });
 
+  it('allows a line without a stated tax status', () => {
+    const invoice = InvoiceSchema.parse({ total: 1, lines: [{ lineTotal: 1 }] });
+    expect(invoice.lines[0]).toEqual({ lineTotal: 100 });
+  });
+
   it('strips unknown properties', () => {
     const invoice = InvoiceSchema.parse({ total: 1, vendorExtension: { x: 1 } });
     expect(invoice).not.toHaveProperty('vendorExtension');

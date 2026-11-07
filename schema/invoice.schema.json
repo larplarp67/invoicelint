@@ -122,18 +122,17 @@
             ]
           },
           "taxStatus": {
+            "description": "GST/HST status as stated on the document. Omit when the document does not state it.",
             "type": "string",
             "enum": [
               "taxable",
               "zero-rated",
               "exempt"
-            ],
-            "description": "GST/HST status of the supply."
+            ]
           }
         },
         "required": [
-          "lineTotal",
-          "taxStatus"
+          "lineTotal"
         ],
         "description": "One supply (invoice line)."
       }

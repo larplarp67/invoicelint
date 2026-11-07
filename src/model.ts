@@ -139,7 +139,12 @@ export const LineSchema = z
     }).optional(),
     unitPrice: money('Price per unit.').optional(),
     lineTotal: money('Line amount.'),
-    taxStatus: TaxStatusSchema,
+    // Optional on purpose: SOR/91-45 s. 3(b)(v) asks whether the document
+    // *states* each supply's status, so "not stated" must be representable.
+    taxStatus: TaxStatusSchema.optional().meta({
+      description:
+        'GST/HST status as stated on the document. Omit when the document does not state it.',
+    }),
   })
   .meta({ description: 'One supply (invoice line).' });
 

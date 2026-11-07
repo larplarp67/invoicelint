@@ -1,5 +1,5 @@
 {
-  "$comment": "Tier 1 (< $100 incl. tax). Alberta, GST 5%. Only supplier name, date and total are required at this tier. Fictional supplier.",
+  "$comment": "Tier 1 (< $100 incl. tax). Alberta, GST 5%. Only supplier name, date and total are required at this tier. The receipt does not state line tax status. Fictional supplier.",
   "invoiceNumber": "R-20260312-0087",
   "issueDate": "2026-03-12",
   "currency": "CAD",
@@ -12,8 +12,7 @@
       "description": "Printer ink cartridge, black",
       "quantity": 1,
       "unitPrice": "42.86",
-      "lineTotal": "42.86",
-      "taxStatus": "taxable"
+      "lineTotal": "42.86"
     }
   ],
   "taxes": [{ "type": "GST", "rate": 5, "taxableAmount": "42.86", "amount": "2.14" }],

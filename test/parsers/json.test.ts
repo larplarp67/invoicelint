@@ -72,9 +72,10 @@ describe('parseJsonInvoice', () => {
       expect.arrayContaining([
         expect.objectContaining({ ruleId: 'PARSE-003', field: 'total' }),
         expect.objectContaining({ ruleId: 'PARSE-003', field: 'lines[1].lineTotal' }),
-        expect.objectContaining({ ruleId: 'PARSE-003', field: 'lines[1].taxStatus' }),
       ]),
     );
+    // taxStatus is optional ("not stated on the document"), so it is not reported.
+    expect(errors(result).map((i) => i.field)).not.toContain('lines[1].taxStatus');
     expect(errors(result).find((i) => i.field === 'total')?.message).toBe(
       '"total" is required but missing.',
     );
