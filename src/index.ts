@@ -69,6 +69,7 @@ export function validate(input: string | object, options: ValidateOptions = {}):
   return { ...addIssues(report, parsed.issues, true), format };
 }
 
+export { type DecodeResult, decodeInvoiceBytes } from './decode.ts';
 export * from './model.ts';
 export {
   type Cents,

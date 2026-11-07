@@ -89,6 +89,11 @@ Phase 4's done-criteria need `invoicelint check` on both formats, so a plain ver
 
 `--pack` takes one ID per flag (repeatable or comma-separated). The planned variadic `--pack <id...>` would swallow the file names after it (`check --pack ca-gst-hst invoice.json` would treat the file as a second pack).
 
+### Reading files: encodings and wildcards (found while verifying on Windows)
+
+- **Encodings.** The CLI reads raw bytes and decodes them with `decodeInvoiceBytes()` (browser-safe, exported for the playground). A BOM wins (UTF-8, UTF-16LE, UTF-16BE). UTF-16 without a BOM is recognised from the zero byte next to the first `<` or `{`. Otherwise an XML declaration's `encoding` is honoured (e.g. ISO-8859-1, which TextDecoder treats as windows-1252), and everything else is UTF-8. Before this, a UTF-16 file written by Windows PowerShell 5.1 (`Out-File`, `>`) failed as "not valid JSON", and Latin-1 XML lost its accented letters. An encoding TextDecoder doesn't know is a usage error (exit 2).
+- **Wildcards.** cmd.exe and PowerShell pass `*.xml` to programs unexpanded, so the CLI expands wildcard arguments itself with `fs.glob`, converting `\` to `/` on Windows (fs.glob ignores backslash paths). An argument that exists as written is never expanded, so a file literally named `invoice[1].json` still works. A pattern matching nothing is a usage error.
+
 ### `XMLValidator` is deprecated in fast-xml-parser 5.x
 
 fast-xml-parser 5.12 marks `XMLValidator` as deprecated in favour of the separate `fast-xml-validator` package (same author, first published May 2026, with its own dependency chain). The built-in validator still ships and works, so it is kept with a targeted lint exception. Revisit when upgrading to fast-xml-parser 6.
