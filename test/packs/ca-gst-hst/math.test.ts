@@ -72,6 +72,33 @@ describe('CA-MATH-002 subtotal + taxes = total', () => {
   });
 });
 
+describe('CA-MATH-002 with document-level allowances and charges', () => {
+  // Lines 221.24, 10.00 discount, 5.00 freight -> taxable 216.24, HST 13% = 28.11, total 244.35
+  const adjusted = {
+    ...tier2,
+    allowanceTotal: '10.00',
+    chargeTotal: '5.00',
+    taxes: [{ type: 'HST' as const, rate: 13, taxableAmount: '216.24', amount: '28.11' }],
+    total: '244.35',
+  };
+
+  it('subtracts allowances and adds charges', () => {
+    expect(findings(check(adjusted))).toEqual([]);
+  });
+
+  it('names the allowances and charges in the message when the total is off', () => {
+    const report = check({ ...adjusted, total: '254.35' });
+    expect(byRule(report, 'CA-MATH-002')[0]?.message).toBe(
+      'The subtotal ($221.24) minus allowances ($10.00) plus charges ($5.00) plus taxes ($28.11) come to $244.35, but the total says $254.35 (a difference of $10.00).',
+    );
+  });
+
+  it('ignoring the allowance would be an error', () => {
+    const { allowanceTotal: _a, chargeTotal: _c, ...noAdjustments } = adjusted;
+    expect(findings(check(noAdjustments))).toEqual(['CA-MATH-002']);
+  });
+});
+
 describe('CA-MATH-003 tax = rate × taxable amount', () => {
   it('errors on HST 13% of $100 shown as $15.00', () => {
     const report = check({
@@ -108,6 +135,21 @@ describe('CA-MATH-003 tax = rate × taxable amount', () => {
       total: '257.30',
     });
     expect(byRule(report, 'CA-MATH-003').map((i) => i.field)).toEqual(['taxes[1].amount']);
+  });
+
+  it('calls an OTHER tax "Tax" in messages and does not treat it as GST/HST', () => {
+    const report = check({
+      ...tier2,
+      taxes: [
+        { type: 'HST', rate: 13, taxableAmount: '221.24', amount: '28.76' },
+        { type: 'OTHER', rate: 25, taxableAmount: '100.00', amount: '20.00' },
+      ],
+      total: '270.00',
+    });
+    expect(byRule(report, 'CA-MATH-003')[0]?.message).toBe(
+      'Tax at 25% of $100.00 is $25.00, but the invoice shows $20.00.',
+    );
+    expect(byRule(report, 'CA-RATE-002')).toEqual([]);
   });
 
   it('notes each tax line it cannot check', () => {

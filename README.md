@@ -44,6 +44,8 @@ Every input format is mapped onto one canonical invoice shape. It's defined with
 
 - **Money** is a number or a decimal string (`1234.56`, `"1,234.56"`) with at most 2 decimal places. Internally it becomes integer cents; tax math never uses floats.
 - **Rates** are in percent: `13` means 13%.
+- **Document-level discounts and charges** go in `allowanceTotal` and `chargeTotal` (positive amounts); `subtotal` is the sum of the lines before them.
+- **Tax `type`** is `GST`, `HST`, `PST`, `QST`, or `OTHER` for a tax invoicelint doesn't classify (e.g. foreign VAT): it counts in the totals but not in the GST/HST checks.
 - **Dates** are `YYYY-MM-DD`.
 - **`lines[].taxStatus`** records what the document _states_ (`taxable`, `zero-rated`, `exempt`). Leave it out when the document doesn't say: the rules need to tell "not stated" apart from "taxable".
 - Only `total` is required. Fields that the tax rules check (supplier name, registration number, buyer, terms, ...) are optional in the schema, so a missing one is reported as a finding with a legal citation, not a parse error.

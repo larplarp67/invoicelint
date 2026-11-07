@@ -33,7 +33,7 @@ An invoice passes when it has no errors. Warnings do not make it fail.
 | CA-BN-001 | error | all | GST/HST number has the right format and check digit | SOR/91-45 s.3(b)(i) |
 | CA-BN-002 | error | all | Number is a GST/HST number (RT), not another CRA account | SOR/91-45 s.3(b)(i) |
 | CA-MATH-001 | error | all | Line amounts add up to the subtotal | Arithmetic check (not a legal requirement) |
-| CA-MATH-002 | error | all | Subtotal plus taxes equals the total | Arithmetic check (not a legal requirement) |
+| CA-MATH-002 | error | all | Subtotal, less allowances, plus charges and taxes, equals the total | Arithmetic check (not a legal requirement) |
 | CA-MATH-003 | error | all | Tax amount equals rate × taxable amount | ETA s.165(1), (2) |
 | CA-MATH-004 | warning | all | GST/HST charged when every line is exempt or zero-rated | ETA s.165(1), (3) |
 | CA-RATE-001 | error | all | GST rate is the rate in force (5%) | ETA s.165(1) |

@@ -50,6 +50,9 @@ type TaxLine = Invoice['taxes'][number];
 
 export const isGstHst = (t: TaxLine): boolean => t.type === 'GST' || t.type === 'HST';
 
+/** How a tax line is named in messages: "GST", "HST", "PST", "QST", or "Tax" for OTHER. */
+export const taxLabel = (t: TaxLine): string => (t.type === 'OTHER' ? 'Tax' : t.type);
+
 /** Stated as exempt or zero-rated: a supply that carries no GST/HST. */
 export const isStatedNonTaxable = (l: Line): boolean =>
   l.taxStatus === 'exempt' || l.taxStatus === 'zero-rated';

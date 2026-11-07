@@ -7,7 +7,13 @@
  * instead of guessing.
  */
 import { defineRule } from '../../types.ts';
-import { type CaContext, allLinesStatedNonTaxable, dollars, isGstHst } from '../context.ts';
+import {
+  type CaContext,
+  allLinesStatedNonTaxable,
+  dollars,
+  isGstHst,
+  taxLabel,
+} from '../context.ts';
 
 const ARITHMETIC = 'Arithmetic check (not a legal requirement)';
 
@@ -45,7 +51,7 @@ export const totalAddsUp = defineRule<CaContext>(
   {
     id: 'CA-MATH-002',
     severity: 'error',
-    title: 'Subtotal plus taxes equals the total',
+    title: 'Subtotal, less allowances, plus charges and taxes, equals the total',
     citation: ARITHMETIC,
     fix: "Check the subtotal, taxes and total against the supplier's records and ask for a corrected invoice.",
   },
@@ -73,12 +79,17 @@ export const totalAddsUp = defineRule<CaContext>(
     }
     const baseLabel = invoice.subtotal === undefined ? 'The lines' : 'The subtotal';
     const taxSum = sum(invoice.taxes.map((t) => t.amount));
-    const expected = base + taxSum;
+    const allowances = invoice.allowanceTotal ?? 0;
+    const charges = invoice.chargeTotal ?? 0;
+    const expected = base - allowances + charges + taxSum;
+    const adjustments =
+      (invoice.allowanceTotal === undefined ? '' : ` minus allowances (${dollars(allowances)})`) +
+      (invoice.chargeTotal === undefined ? '' : ` plus charges (${dollars(charges)})`);
     const diff = Math.abs(invoice.total - expected);
     if (diff <= options.toleranceCents * invoice.taxes.length) return;
     report({
       field: 'total',
-      message: `${baseLabel} (${dollars(base)}) plus taxes (${dollars(taxSum)}) come to ${dollars(expected)}, but the total says ${dollars(invoice.total)} (a difference of ${dollars(diff)}).`,
+      message: `${baseLabel} (${dollars(base)})${adjustments} plus taxes (${dollars(taxSum)}) come to ${dollars(expected)}, but the total says ${dollars(invoice.total)} (a difference of ${dollars(diff)}).`,
     });
   },
 );
@@ -103,7 +114,7 @@ export const taxAmountMatchesRate = defineRule<CaContext>(
         report({
           field: `taxes[${i}]`,
           severity: 'info',
-          message: `Skipped checking the ${tax.type} amount: the invoice doesn't show the ${missing}.`,
+          message: `Skipped checking the ${taxLabel(tax)} amount: the invoice doesn't show the ${missing}.`,
         });
         return;
       }
@@ -111,7 +122,7 @@ export const taxAmountMatchesRate = defineRule<CaContext>(
       if (Math.abs(tax.amount - expected) <= options.toleranceCents) return;
       report({
         field: `taxes[${i}].amount`,
-        message: `${tax.type} at ${tax.rate}% of ${dollars(tax.taxableAmount)} is ${dollars(expected)}, but the invoice shows ${dollars(tax.amount)}.`,
+        message: `${taxLabel(tax)} at ${tax.rate}% of ${dollars(tax.taxableAmount)} is ${dollars(expected)}, but the invoice shows ${dollars(tax.amount)}.`,
       });
     });
   },

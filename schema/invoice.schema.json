@@ -149,9 +149,10 @@
               "GST",
               "HST",
               "PST",
-              "QST"
+              "QST",
+              "OTHER"
             ],
-            "description": "Kind of tax."
+            "description": "Kind of tax. OTHER = a tax invoicelint does not classify (for example foreign VAT); it counts in the totals but not in GST/HST checks."
           },
           "rate": {
             "description": "Tax rate. In percent: 13 means 13%. Up to 4 decimal places.",
@@ -204,7 +205,21 @@
       "description": "The document states that tax is included in the amounts (e.g. \"total includes HST at 13%\")."
     },
     "subtotal": {
-      "description": "Total before tax. Number or decimal string (e.g. 1234.56 or \"1,234.56\"); at most 2 decimal places.",
+      "description": "Sum of the line amounts, before document-level allowances, charges and tax. Number or decimal string (e.g. 1234.56 or \"1,234.56\"); at most 2 decimal places.",
+      "type": [
+        "string",
+        "number"
+      ]
+    },
+    "allowanceTotal": {
+      "description": "Document-level allowances (discounts) in total, as a positive amount. They reduce the amount tax is charged on. Number or decimal string (e.g. 1234.56 or \"1,234.56\"); at most 2 decimal places.",
+      "type": [
+        "string",
+        "number"
+      ]
+    },
+    "chargeTotal": {
+      "description": "Document-level charges (for example freight) in total, as a positive amount. They add to the amount tax is charged on. Number or decimal string (e.g. 1234.56 or \"1,234.56\"); at most 2 decimal places.",
       "type": [
         "string",
         "number"

@@ -94,8 +94,11 @@ export const TaxStatusSchema = z
   .enum(TAX_STATUSES)
   .meta({ description: 'GST/HST status of the supply.' });
 
-export const TAX_TYPES = ['GST', 'HST', 'PST', 'QST'] as const;
-export const TaxTypeSchema = z.enum(TAX_TYPES).meta({ description: 'Kind of tax.' });
+export const TAX_TYPES = ['GST', 'HST', 'PST', 'QST', 'OTHER'] as const;
+export const TaxTypeSchema = z.enum(TAX_TYPES).meta({
+  description:
+    'Kind of tax. OTHER = a tax invoicelint does not classify (for example foreign VAT); it counts in the totals but not in GST/HST checks.',
+});
 
 // ---------------------------------------------------------------------------
 // Parts
@@ -192,7 +195,15 @@ export const InvoiceSchema = z
       .default([])
       .meta({ description: 'Taxes charged, one entry per tax.' }),
     taxIncludedStatement: TaxIncludedStatementSchema.optional(),
-    subtotal: money('Total before tax.').optional(),
+    subtotal: money(
+      'Sum of the line amounts, before document-level allowances, charges and tax.',
+    ).optional(),
+    allowanceTotal: money(
+      'Document-level allowances (discounts) in total, as a positive amount. They reduce the amount tax is charged on.',
+    ).optional(),
+    chargeTotal: money(
+      'Document-level charges (for example freight) in total, as a positive amount. They add to the amount tax is charged on.',
+    ).optional(),
     total: money('Total amount paid or payable, including tax.'),
     paymentTerms: text('Terms of payment, e.g. "Net 30".').optional(),
   })
