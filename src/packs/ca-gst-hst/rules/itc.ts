@@ -9,7 +9,6 @@ import { defineRule } from '../../types.ts';
 import {
   type CaContext,
   allLinesStatedNonTaxable,
-  dollars,
   isGstHst,
   isStatedNonTaxable,
 } from '../context.ts';
@@ -69,7 +68,7 @@ export const registrationNumber = defineRule<CaContext>(
     appliesFromTier: 2,
     fix: 'Ask the supplier for its GST/HST number (9 digits, then RT and 4 digits, e.g. 123456789 RT 0001) and keep it with this invoice.',
   },
-  ({ invoice }, report) => {
+  ({ invoice, money }, report) => {
     // s.3(b)(i): the name of the supplier OR the intermediary, and the number
     // of "the supplier or the intermediary, as the case may be". Any named
     // party showing its own number satisfies it.
@@ -84,7 +83,7 @@ export const registrationNumber = defineRule<CaContext>(
     const onlyIntermediaryNamed = named.length === 1 && named[0]?.key === 'intermediary';
     report({
       field: onlyIntermediaryNamed ? 'intermediary.gstHstNumber' : 'supplier.gstHstNumber',
-      message: `This invoice totals ${dollars(invoice.total)} including tax. Invoices of $100 or more need the GST/HST registration number of the ${onlyIntermediaryNamed ? 'intermediary' : 'supplier'} named on it to support an input tax credit, and this document alone doesn't show one.`,
+      message: `This invoice totals ${money.amount(invoice.total)} including tax. Invoices of $100 or more need the GST/HST registration number of the ${onlyIntermediaryNamed ? 'intermediary' : 'supplier'} named on it to support an input tax credit, and this document alone doesn't show one.`,
     });
   },
 );
@@ -173,11 +172,11 @@ export const buyerName = defineRule<CaContext>(
     appliesFromTier: 3,
     fix: 'Ask the supplier to put your business name (or trading name) on the invoice.',
   },
-  ({ invoice }, report) => {
+  ({ invoice, money }, report) => {
     if (invoice.buyer?.name !== undefined || invoice.buyer?.tradingName !== undefined) return;
     report({
       field: 'buyer.name',
-      message: `This invoice totals ${dollars(invoice.total)} including tax. Invoices of $500 or more need the buyer's name (or trading name, or authorized agent's name) to support an input tax credit, and this document alone doesn't show one.`,
+      message: `This invoice totals ${money.amount(invoice.total)} including tax. Invoices of $500 or more need the buyer's name (or trading name, or authorized agent's name) to support an input tax credit, and this document alone doesn't show one.`,
     });
   },
 );

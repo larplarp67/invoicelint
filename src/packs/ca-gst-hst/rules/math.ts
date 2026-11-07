@@ -7,13 +7,7 @@
  * instead of guessing.
  */
 import { defineRule } from '../../types.ts';
-import {
-  type CaContext,
-  allLinesStatedNonTaxable,
-  dollars,
-  isGstHst,
-  taxLabel,
-} from '../context.ts';
+import { type CaContext, allLinesStatedNonTaxable, isGstHst, taxLabel } from '../context.ts';
 
 const ARITHMETIC = 'Arithmetic check (not a legal requirement)';
 
@@ -27,7 +21,7 @@ export const linesAddUp = defineRule<CaContext>(
     citation: ARITHMETIC,
     fix: "Check the lines and the subtotal against the supplier's records and ask for a corrected invoice.",
   },
-  ({ invoice }, report) => {
+  ({ invoice, money }, report) => {
     const { lines, subtotal } = invoice;
     if (lines.length === 0 || subtotal === undefined) {
       report({
@@ -42,7 +36,7 @@ export const linesAddUp = defineRule<CaContext>(
     if (lineSum === subtotal) return;
     report({
       field: 'subtotal',
-      message: `The line amounts add up to ${dollars(lineSum)}, but the subtotal says ${dollars(subtotal)} (a difference of ${dollars(Math.abs(subtotal - lineSum))}).`,
+      message: `The line amounts add up to ${money.amount(lineSum)}, but the subtotal says ${money.amount(subtotal)} (a difference of ${money.amount(Math.abs(subtotal - lineSum))}).`,
     });
   },
 );
@@ -55,7 +49,7 @@ export const totalAddsUp = defineRule<CaContext>(
     citation: ARITHMETIC,
     fix: "Check the subtotal, taxes and total against the supplier's records and ask for a corrected invoice.",
   },
-  ({ invoice, options }, report) => {
+  ({ invoice, options, money }, report) => {
     if (invoice.taxIncludedStatement !== undefined) {
       report({
         field: 'total',
@@ -83,13 +77,15 @@ export const totalAddsUp = defineRule<CaContext>(
     const charges = invoice.chargeTotal ?? 0;
     const expected = base - allowances + charges + taxSum;
     const adjustments =
-      (invoice.allowanceTotal === undefined ? '' : ` minus allowances (${dollars(allowances)})`) +
-      (invoice.chargeTotal === undefined ? '' : ` plus charges (${dollars(charges)})`);
+      (invoice.allowanceTotal === undefined
+        ? ''
+        : ` minus allowances (${money.amount(allowances)})`) +
+      (invoice.chargeTotal === undefined ? '' : ` plus charges (${money.amount(charges)})`);
     const diff = Math.abs(invoice.total - expected);
     if (diff <= options.toleranceCents * invoice.taxes.length) return;
     report({
       field: 'total',
-      message: `${baseLabel} (${dollars(base)})${adjustments} plus taxes (${dollars(taxSum)}) come to ${dollars(expected)}, but the total says ${dollars(invoice.total)} (a difference of ${dollars(diff)}).`,
+      message: `${baseLabel} (${money.amount(base)})${adjustments} plus taxes (${money.amount(taxSum)}) come to ${money.amount(expected)}, but the total says ${money.amount(invoice.total)} (a difference of ${money.amount(diff)}).`,
     });
   },
 );
@@ -122,7 +118,7 @@ export const taxAmountMatchesRate = defineRule<CaContext>(
       if (Math.abs(tax.amount - expected) <= options.toleranceCents) return;
       report({
         field: `taxes[${i}].amount`,
-        message: `${taxLabel(tax)} at ${tax.rate}% of ${dollars(tax.taxableAmount)} is ${dollars(expected)}, but the invoice shows ${dollars(tax.amount)}.`,
+        message: `${taxLabel(tax)} at ${tax.rate}% of ${money.amount(tax.taxableAmount)} is ${money.amount(expected)}, but the invoice shows ${money.amount(tax.amount)}.`,
       });
     });
   },

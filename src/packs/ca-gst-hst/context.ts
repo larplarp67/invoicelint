@@ -10,7 +10,21 @@ export function dollars(cents: Cents): string {
   return cents < 0 ? `-$${formatMoney(-cents)}` : `$${formatMoney(cents)}`;
 }
 
+/**
+ * Format an invoice amount in its own currency: CAD -> "$1,234.56",
+ * others -> "1,234.56 SEK". (Tier thresholds are always CAD and use "$".)
+ */
+export function formatAmount(cents: Cents, currency: string): string {
+  if (currency === 'CAD') return dollars(cents);
+  return `${cents < 0 ? '-' : ''}${formatMoney(Math.abs(cents))} ${currency}`;
+}
+
 export const money = { dollars, formatMoney, multiplyCents, percentOf } as const;
+
+export type MoneyHelpers = typeof money & {
+  /** Format an amount in the invoice's currency. */
+  amount: (cents: Cents) => string;
+};
 
 export interface CaContext extends RuleContext {
   tier: Tier;
@@ -21,7 +35,7 @@ export interface CaContext extends RuleContext {
   date: string | undefined;
   /** Name of the field `date` came from, for issue paths. */
   dateField: 'issueDate' | 'taxPaidDate';
-  money: typeof money;
+  money: MoneyHelpers;
   /** Dated GST/HST rate table and lookups. */
   rates: typeof rates;
 }
@@ -36,7 +50,7 @@ export function createCaContext(invoice: Invoice, options: EngineOptions): CaCon
       invoice.issueDate === undefined && invoice.taxPaidDate !== undefined
         ? 'taxPaidDate'
         : 'issueDate',
-    money,
+    money: { ...money, amount: (cents) => formatAmount(cents, invoice.currency) },
     rates,
   };
 }

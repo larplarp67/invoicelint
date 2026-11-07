@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { formatAmount } from '../../../src/packs/ca-gst-hst/context.ts';
 import { computeTier } from '../../../src/packs/ca-gst-hst/tier.ts';
 import { byRule, check, findings, tier2 } from '../../helpers/ca.ts';
 
@@ -69,5 +70,30 @@ describe('CA-CUR-001', () => {
 
   it('is silent for CAD (the default)', () => {
     expect(byRule(check({ total: 1 }), 'CA-CUR-001')).toEqual([]);
+  });
+});
+
+describe('amounts in messages use the invoice currency', () => {
+  it('formats CAD with "$" and other currencies with their code', () => {
+    expect(formatAmount(123456, 'CAD')).toBe('$1,234.56');
+    expect(formatAmount(177400, 'SEK')).toBe('1,774.00 SEK');
+    expect(formatAmount(-500, 'EUR')).toBe('-5.00 EUR');
+  });
+
+  it('a USD invoice states its total in USD, while the thresholds stay in CAD', () => {
+    const report = check({ ...tier2, currency: 'USD', supplier: { name: 'S' } });
+    expect(byRule(report, 'CA-ITC-010')[0]?.message).toMatch(
+      /^This invoice totals 250\.00 USD including tax\. Invoices of \$100 or more/,
+    );
+    expect(byRule(report, 'CA-TIER-001')[0]?.message).toMatch(
+      /the total of 250\.00 USD including tax is between \$100 and \$499\.99/,
+    );
+  });
+
+  it('math messages use the invoice currency too', () => {
+    const report = check({ ...tier2, currency: 'EUR', total: '251.00' });
+    expect(byRule(report, 'CA-MATH-002')[0]?.message).toBe(
+      'The subtotal (221.24 EUR) plus taxes (28.76 EUR) come to 250.00 EUR, but the total says 251.00 EUR (a difference of 1.00 EUR).',
+    );
   });
 });
