@@ -12,6 +12,24 @@ A GST/HST registration number is the 15-character RT account (`123456789RT0001`)
 
 Negative totals (credit notes) are tiered like invoices, so a credit note always lands in tier 1. Credit notes have their own prescribed contents (ETA s.232) and are out of scope for v0.1.
 
+## Phase 4: UBL input
+
+### XML security policy
+
+- **Size limit** checked before parsing: default 5 MB of UTF-8 (`maxXmlBytes`), counted in bytes, not characters.
+- **No DTDs at all.** Any `<!DOCTYPE` or `<!ENTITY` is refused (PARSE-UBL-003) before the parser runs. UBL never needs a DTD, and refusing them outright removes XXE and entity-expansion attacks no matter how the parser is configured. Tested: fast-xml-parser's validator accepts a billion-laughs document as well-formed, so the library's validator alone isn't a defence.
+- **Entity decoding is ours.** The parser's entity processing is off. The five predefined entities and numeric character references (`&#233;`) are decoded in one pass, so `&amp;#233;` stays the literal text `&#233;`. With `htmlEntities: false`, fast-xml-parser 5.12 does not decode numeric references, so this is needed for correctness too. CDATA is never decoded.
+- **Depth limit**: 100 nested elements by default.
+- Values are kept as strings (`parseTagValue: false`); amounts go through `money.ts`, never `parseFloat`.
+
+### Namespaces resolved by URI
+
+The tree is built from fast-xml-parser's ordered output with our own namespace scoping: each element carries its namespace URI and local name, and lookups use `(URI, local name)`. Prefixes (`cbc:`, `cac:`, a default namespace, or anything else) don't matter. An undeclared prefix is a PARSE-UBL-002 error.
+
+### `XMLValidator` is deprecated in fast-xml-parser 5.x
+
+fast-xml-parser 5.12 marks `XMLValidator` as deprecated in favour of the separate `fast-xml-validator` package (same author, first published May 2026, with its own dependency chain). The built-in validator still ships and works, so it is kept with a targeted lint exception. Revisit when upgrading to fast-xml-parser 6.
+
 ## Phase 3 rule decisions (maintainer-approved 2026-11-07)
 
 ### Q1 resolved: invoices dated before 2021-04-20
