@@ -11,7 +11,7 @@ export default defineConfig([
     sourcemap: true,
   },
   {
-    // CLI: Node-only entry point.
+    // CLI: Node-only entry point (bundles src/cli/).
     entry: { cli: 'src/cli.ts' },
     format: ['esm'],
     platform: 'node',

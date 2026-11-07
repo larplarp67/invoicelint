@@ -31,7 +31,7 @@ export default tseslint.config(
   {
     // The core library must run in the browser: no Node built-ins outside the CLI.
     files: ['src/**/*.ts'],
-    ignores: ['src/cli.ts'],
+    ignores: ['src/cli.ts', 'src/cli/**'],
     rules: {
       'no-restricted-imports': [
         'error',

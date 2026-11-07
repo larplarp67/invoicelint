@@ -8,7 +8,9 @@ import type { z } from 'zod';
 import { type Invoice, InvoiceSchema } from '../model.ts';
 import type { Issue } from '../types.ts';
 
-export type JsonParseResult = { ok: true; invoice: Invoice } | { ok: false; parseErrors: Issue[] };
+/** Same shape as the UBL parser. `issues` is always empty for JSON. */
+export type JsonParseResult =
+  { ok: true; invoice: Invoice; issues: Issue[] } | { ok: false; parseErrors: Issue[] };
 
 /** Parse-error rule IDs. */
 export const PARSE = {
@@ -144,6 +146,6 @@ export function parseJsonInvoice(input: string | object): JsonParseResult {
   }
 
   const result = InvoiceSchema.safeParse(data, { reportInput: true });
-  if (result.success) return { ok: true, invoice: result.data };
+  if (result.success) return { ok: true, invoice: result.data, issues: [] };
   return { ok: false, parseErrors: result.error.issues.map(toIssue) };
 }

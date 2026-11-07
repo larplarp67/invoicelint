@@ -3,6 +3,7 @@
  */
 import {
   type ValidationReport,
+  addIssues,
   parseFailureReport,
   resolveEngineOptions,
   runPacks,
@@ -10,12 +11,21 @@ import {
 import { BUILTIN_PACKS, resolvePacks } from './packs/index.ts';
 import type { RulePack } from './packs/types.ts';
 import { parseJsonInvoice } from './parsers/json.ts';
+import { parseUblInvoice } from './parsers/ubl.ts';
+import { DEFAULT_MAX_XML_BYTES } from './parsers/xml.ts';
 
 export const VERSION = '0.0.0';
 
+export type InputFormat = 'json' | 'ubl';
+
 export interface ValidateOptions {
-  /** Input format. Only "json" for now; "ubl" arrives with the UBL parser. */
-  format?: 'json';
+  /**
+   * Input format. "auto" (default): a string starting with "<" (after
+   * whitespace and a byte-order mark) is UBL XML, anything else is JSON.
+   */
+  format?: InputFormat | 'auto';
+  /** Maximum size of an XML input in bytes. Default 5 MB. */
+  maxXmlBytes?: number;
   /**
    * Packs to run, by ID or as pack objects. When given, these packs run even if
    * their `appliesTo()` says no. Default: every built-in pack that applies.
@@ -30,18 +40,33 @@ export interface ValidateOptions {
  * throws only on programmer errors (unknown pack ID, bad option values,
  * wrong argument types).
  */
+/** Guess the input format: XML if a string starts with "<" (after whitespace / BOM). */
+export function detectFormat(input: string | object): InputFormat {
+  return typeof input === 'string' && /^\uFEFF?\s*</.test(input) ? 'ubl' : 'json';
+}
+
 export function validate(input: string | object, options: ValidateOptions = {}): ValidationReport {
   // Typed as string: plain-JS callers can pass anything.
-  const format: string = options.format ?? 'json';
-  if (format !== 'json') throw new RangeError(`Unsupported format "${format}"`);
+  const requested: string = options.format ?? 'auto';
+  if (requested !== 'auto' && requested !== 'json' && requested !== 'ubl') {
+    throw new RangeError(`Unsupported format "${requested}". Use "auto", "json" or "ubl".`);
+  }
+  const format: InputFormat = requested === 'auto' ? detectFormat(input) : requested;
+  if (format === 'ubl' && typeof input !== 'string') {
+    throw new TypeError('UBL input must be an XML string.');
+  }
   const engineOptions = resolveEngineOptions(
     options.toleranceCents === undefined ? {} : { toleranceCents: options.toleranceCents },
   );
   const packs = options.packs ? resolvePacks(options.packs) : BUILTIN_PACKS;
 
-  const parsed = parseJsonInvoice(input);
-  if (!parsed.ok) return parseFailureReport(parsed.parseErrors);
-  return runPacks(parsed.invoice, packs, engineOptions, options.packs !== undefined);
+  const parsed =
+    format === 'ubl'
+      ? parseUblInvoice(input as string, { maxBytes: options.maxXmlBytes ?? DEFAULT_MAX_XML_BYTES })
+      : parseJsonInvoice(input);
+  if (!parsed.ok) return { ...parseFailureReport(parsed.parseErrors), format };
+  const report = runPacks(parsed.invoice, packs, engineOptions, options.packs !== undefined);
+  return { ...addIssues(report, parsed.issues, true), format };
 }
 
 export * from './model.ts';
@@ -59,8 +84,18 @@ export {
 export type { Issue, Severity } from './types.ts';
 export { PARSE, type JsonParseResult, formatPath, parseJsonInvoice } from './parsers/json.ts';
 export {
+  UBL_ISSUES,
+  UBL_NS,
+  type UblOptions,
+  type UblParseResult,
+  normalizeProvince,
+  parseUblInvoice,
+} from './parsers/ubl.ts';
+export { DEFAULT_MAX_XML_BYTES, XML_ISSUES } from './parsers/xml.ts';
+export {
   type ValidationReport,
   DEFAULT_ENGINE_OPTIONS,
+  addIssues,
   runPacks,
   parseFailureReport,
 } from './engine.ts';

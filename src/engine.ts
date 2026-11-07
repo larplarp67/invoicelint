@@ -10,6 +10,8 @@ export interface ValidationReport {
   ok: boolean;
   /** Tier computed by the first pack that has tiers (ca-gst-hst: 1, 2 or 3). */
   tier?: number;
+  /** Input format that was parsed. */
+  format?: 'json' | 'ubl';
   /** Packs that ran. */
   packs: { id: string; version: string }[];
   /** Wrong data: bad registration number, math that doesn't add up, impossible rate, parse errors. */
@@ -36,9 +38,31 @@ export function emptyReport(): ValidationReport {
   return { ok: true, packs: [], errors: [], warnings: [], infos: [] };
 }
 
-/** A report for input that could not be parsed. */
+/** Add issues to a report, by severity, and recompute `ok`. Earlier issues stay first. */
+export function addIssues(
+  report: ValidationReport,
+  issues: readonly Issue[],
+  prepend = false,
+): ValidationReport {
+  const bucket = (severity: Issue['severity']) => issues.filter((i) => i.severity === severity);
+  const merge = (existing: Issue[], extra: Issue[]) =>
+    prepend ? [...extra, ...existing] : [...existing, ...extra];
+  const errors = merge(report.errors, bucket('error'));
+  return {
+    ...report,
+    ok: errors.length === 0,
+    errors,
+    warnings: merge(report.warnings, bucket('warning')),
+    infos: merge(report.infos, bucket('info')),
+  };
+}
+
+/**
+ * A report for input that could not be parsed. Usually all errors; a credit
+ * note (PARSE-UBL-010) is an info, so that report is `ok` with no packs run.
+ */
 export function parseFailureReport(parseErrors: Issue[]): ValidationReport {
-  return { ...emptyReport(), ok: false, errors: parseErrors };
+  return addIssues(emptyReport(), parseErrors);
 }
 
 /**

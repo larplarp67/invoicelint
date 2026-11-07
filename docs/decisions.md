@@ -75,6 +75,20 @@ PARSE-UBL-031 covers `cbc:ID`, `cbc:IssueDate`, `cbc:DocumentCurrencyCode` (adde
 - `cbc:TaxPointDate` isn't mapped to `taxPaidDate`: an invoice always has `IssueDate`, which the rules use first.
 - A Peppol transport envelope (`StandardBusinessDocument`) isn't unwrapped; pass the `Invoice` itself.
 
+### Format auto-detection
+
+`validate()` and the CLI treat a string that starts with `<` (after optional BOM and whitespace) as UBL XML and anything else as JSON. Objects are JSON. `format: 'json' | 'ubl'` (CLI `--format-in`) overrides it. Forcing UBL on a non-string is a programmer error (TypeError).
+
+### Parse notes in the report
+
+Both parsers now return `{ ok: true, invoice, issues }`; the UBL parser's `issues` (infos such as PARSE-UBL-020/021/022 and non-blocking errors such as PARSE-UBL-030/031) are put at the front of the report, in the right severity bucket, and `ok` is recomputed. A credit note (PARSE-UBL-010, info) gives a report that is `ok` with no packs run: nothing was checked, but nothing is wrong either. The CLI prints "(no rule packs ran)" so it isn't mistaken for a pass.
+
+### A working `check` command now; polish in Phase 5
+
+Phase 4's done-criteria need `invoicelint check` on both formats, so a plain version ships now: per-file PASS/FAIL, tier, each finding with its fix and source, `--format json`, `--format-in`, `--pack`. Exit codes: 0 no errors, 1 errors in any file, 2 usage error (bad option, unknown pack, unreadable file). Colours, friendlier field labels, a summary and `--strict` are Phase 5.
+
+`--pack` takes one ID per flag (repeatable or comma-separated). The planned variadic `--pack <id...>` would swallow the file names after it (`check --pack ca-gst-hst invoice.json` would treat the file as a second pack).
+
 ### `XMLValidator` is deprecated in fast-xml-parser 5.x
 
 fast-xml-parser 5.12 marks `XMLValidator` as deprecated in favour of the separate `fast-xml-validator` package (same author, first published May 2026, with its own dependency chain). The built-in validator still ships and works, so it is kept with a targeted lint exception. Revisit when upgrading to fast-xml-parser 6.
