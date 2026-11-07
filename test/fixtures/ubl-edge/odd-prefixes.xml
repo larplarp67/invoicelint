@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Unusual prefixes (ubl:, agg:, bas:) for the same namespaces. -->
+<ubl:Invoice xmlns:ubl="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:agg="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:bas="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <bas:CustomizationID>urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0</bas:CustomizationID>
+  <bas:ProfileID>urn:fdc:peppol.eu:2017:poacc:billing:01:1.0</bas:ProfileID>
+  <bas:ID>INV-1042</bas:ID>
+  <bas:IssueDate>2026-04-02</bas:IssueDate>
+  <bas:InvoiceTypeCode>380</bas:InvoiceTypeCode>
+  <bas:DocumentCurrencyCode>CAD</bas:DocumentCurrencyCode>
+  <agg:AccountingSupplierParty>
+    <agg:Party>
+      <agg:PartyName>
+        <bas:Name>Maple Leaf Printing Inc.</bas:Name>
+      </agg:PartyName>
+      <agg:PostalAddress>
+        <bas:StreetName>100 Example St</bas:StreetName>
+        <bas:CityName>Example City</bas:CityName>
+        <bas:PostalZone>A1A 1A1</bas:PostalZone>
+        <bas:CountrySubentity>Ontario</bas:CountrySubentity>
+        <agg:Country>
+          <bas:IdentificationCode>CA</bas:IdentificationCode>
+        </agg:Country>
+      </agg:PostalAddress>
+      <agg:PartyTaxScheme>
+        <bas:CompanyID>812345676 RT 0001</bas:CompanyID>
+        <agg:TaxScheme>
+          <bas:ID>VAT</bas:ID>
+        </agg:TaxScheme>
+      </agg:PartyTaxScheme>
+    </agg:Party>
+  </agg:AccountingSupplierParty>
+  <agg:TaxTotal>
+    <bas:TaxAmount currencyID="CAD">28.76</bas:TaxAmount>
+    <agg:TaxSubtotal>
+      <bas:TaxableAmount currencyID="CAD">221.24</bas:TaxableAmount>
+      <bas:TaxAmount currencyID="CAD">28.76</bas:TaxAmount>
+      <agg:TaxCategory>
+        <bas:ID>S</bas:ID>
+        <bas:Percent>13</bas:Percent>
+        <agg:TaxScheme>
+          <bas:ID>VAT</bas:ID>
+        </agg:TaxScheme>
+      </agg:TaxCategory>
+    </agg:TaxSubtotal>
+  </agg:TaxTotal>
+  <agg:LegalMonetaryTotal>
+    <bas:LineExtensionAmount currencyID="CAD">221.24</bas:LineExtensionAmount>
+    <bas:TaxExclusiveAmount currencyID="CAD">221.24</bas:TaxExclusiveAmount>
+    <bas:TaxInclusiveAmount currencyID="CAD">250.00</bas:TaxInclusiveAmount>
+    <bas:PayableAmount currencyID="CAD">250.00</bas:PayableAmount>
+  </agg:LegalMonetaryTotal>
+  <agg:InvoiceLine>
+    <bas:ID>1</bas:ID>
+    <bas:InvoicedQuantity unitCode="EA">1</bas:InvoicedQuantity>
+    <bas:LineExtensionAmount currencyID="CAD">150.00</bas:LineExtensionAmount>
+    <agg:Item>
+      <bas:Name>Business cards, 500 pcs</bas:Name>
+      <agg:ClassifiedTaxCategory>
+        <bas:ID>S</bas:ID>
+        <bas:Percent>13</bas:Percent>
+        <agg:TaxScheme>
+          <bas:ID>VAT</bas:ID>
+        </agg:TaxScheme>
+      </agg:ClassifiedTaxCategory>
+    </agg:Item>
+    <agg:Price>
+      <bas:PriceAmount currencyID="CAD">150.00</bas:PriceAmount>
+    </agg:Price>
+  </agg:InvoiceLine>
+  <agg:InvoiceLine>
+    <bas:ID>2</bas:ID>
+    <bas:InvoicedQuantity unitCode="EA">1</bas:InvoicedQuantity>
+    <bas:LineExtensionAmount currencyID="CAD">71.24</bas:LineExtensionAmount>
+    <agg:Item>
+      <bas:Name>Letterhead, 250 sheets</bas:Name>
+      <agg:ClassifiedTaxCategory>
+        <bas:ID>S</bas:ID>
+        <bas:Percent>13</bas:Percent>
+        <agg:TaxScheme>
+          <bas:ID>VAT</bas:ID>
+        </agg:TaxScheme>
+      </agg:ClassifiedTaxCategory>
+    </agg:Item>
+    <agg:Price>
+      <bas:PriceAmount currencyID="CAD">71.24</bas:PriceAmount>
+    </agg:Price>
+  </agg:InvoiceLine>
+</ubl:Invoice>

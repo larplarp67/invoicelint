@@ -30,5 +30,8 @@ jobs:
       - name: Rules doc is up to date
         run: pnpm docs:rules --check
       - run: pnpm build
-      - name: CLI smoke test
-        run: node dist/cli.js --version
+      - name: CLI smoke test (JSON and UBL)
+        run: |
+          node dist/cli.js --version
+          node dist/cli.js check test/fixtures/valid/tier2-on-invoice-250.json
+          node dist/cli.js check test/fixtures/valid/tier2-on-invoice-250.xml

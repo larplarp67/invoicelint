@@ -17,10 +17,80 @@ _TODO (phase 5)._
 ## Usage
 
 ```sh
-invoicelint check invoice.json --format pretty
+invoicelint check invoice.json                # canonical JSON
+invoicelint check invoice.xml                 # UBL 2.1 / Peppol BIS Billing 3.0
+invoicelint check *.json *.xml --format json  # machine-readable report
 ```
 
-_TODO (phase 5): library API, examples and sample output._
+Exit codes: `0` no errors (warnings allowed), `1` errors found, `2` usage error.
+
+_TODO (phase 5): library API, sample output, `--strict`._
+
+## Supported inputs
+
+The format is detected automatically: input that starts with `<` is XML, anything else is JSON. Override it with `--format-in json|ubl` (or `validate(input, { format })`).
+
+| Input                                        | Notes                                                                                                                     |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Canonical JSON**                           | The [invoice model](#invoice-model) below.                                                                                |
+| **UBL 2.1 Invoice** (Peppol BIS Billing 3.0) | Mapped onto the same model. Elements are matched by namespace, so `cbc:`/`cac:` prefixes or default namespaces both work. |
+| UBL credit notes                             | Recognized and reported (PARSE-UBL-010), not checked yet.                                                                 |
+
+A UBL invoice from an Ontario supplier, trimmed to the parts invoicelint reads:
+
+```xml
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <cbc:ID>INV-1042</cbc:ID>
+  <cbc:IssueDate>2026-04-02</cbc:IssueDate>
+  <cbc:DocumentCurrencyCode>CAD</cbc:DocumentCurrencyCode>
+  <cac:AccountingSupplierParty><cac:Party>
+    <cac:PartyName><cbc:Name>Maple Leaf Printing Inc.</cbc:Name></cac:PartyName>
+    <cac:PostalAddress>
+      <cbc:CountrySubentity>Ontario</cbc:CountrySubentity>
+      <cac:Country><cbc:IdentificationCode>CA</cbc:IdentificationCode></cac:Country>
+    </cac:PostalAddress>
+    <cac:PartyTaxScheme>
+      <cbc:CompanyID>812345676RT0001</cbc:CompanyID>
+      <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme>
+    </cac:PartyTaxScheme>
+  </cac:Party></cac:AccountingSupplierParty>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="CAD">28.76</cbc:TaxAmount>
+    <cac:TaxSubtotal>
+      <cbc:TaxableAmount currencyID="CAD">221.24</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="CAD">28.76</cbc:TaxAmount>
+      <cac:TaxCategory>
+        <cbc:ID>S</cbc:ID><cbc:Percent>13</cbc:Percent>
+        <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme>
+      </cac:TaxCategory>
+    </cac:TaxSubtotal>
+  </cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="CAD">221.24</cbc:LineExtensionAmount>
+    <cbc:TaxInclusiveAmount currencyID="CAD">250.00</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="CAD">250.00</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+  <cac:InvoiceLine>
+    <cbc:InvoicedQuantity unitCode="EA">1</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="CAD">221.24</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Name>Business cards and letterhead</cbc:Name>
+      <cac:ClassifiedTaxCategory><cbc:ID>S</cbc:ID><cbc:Percent>13</cbc:Percent>
+        <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:ClassifiedTaxCategory>
+    </cac:Item>
+    <cac:Price><cbc:PriceAmount currencyID="CAD">221.24</cbc:PriceAmount></cac:Price>
+  </cac:InvoiceLine>
+</Invoice>
+```
+
+How UBL maps to Canadian tax (details in [docs/decisions.md](./docs/decisions.md)):
+
+- Peppol labels every tax "VAT". For a Canadian seller, a 5% subtotal is read as **GST** and 13%, 14% or 15% as **HST**. An explicit `TaxScheme/ID` of `GST`, `HST`, `PST` or `QST` is used as is. Anything else counts as "other tax" with a note.
+- Line tax category `S`/`Z`/`E` becomes taxable / zero-rated / exempt. Other codes (e.g. `AE` reverse charge) leave the status unset with a note.
+- The total is `TaxInclusiveAmount`, not `PayableAmount` (which prepayments reduce).
+- Security: XML over 5 MB, any DTD/entity declaration (XXE, "billion laughs") and deep nesting are refused before parsing.
 
 ## Invoice model
 

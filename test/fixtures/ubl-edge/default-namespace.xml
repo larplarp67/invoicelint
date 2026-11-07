@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- No prefixes at all: every element declares its namespace as the default. -->
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">
+  <CustomizationID xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0</CustomizationID>
+  <ProfileID xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">urn:fdc:peppol.eu:2017:poacc:billing:01:1.0</ProfileID>
+  <ID xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">INV-1042</ID>
+  <IssueDate xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">2026-04-02</IssueDate>
+  <InvoiceTypeCode xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">380</InvoiceTypeCode>
+  <DocumentCurrencyCode xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">CAD</DocumentCurrencyCode>
+  <AccountingSupplierParty xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2">
+    <Party>
+      <PartyName>
+        <Name xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">Maple Leaf Printing Inc.</Name>
+      </PartyName>
+      <PostalAddress>
+        <StreetName xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">100 Example St</StreetName>
+        <CityName xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">Example City</CityName>
+        <PostalZone xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">A1A 1A1</PostalZone>
+        <CountrySubentity xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">Ontario</CountrySubentity>
+        <Country>
+          <IdentificationCode xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">CA</IdentificationCode>
+        </Country>
+      </PostalAddress>
+      <PartyTaxScheme>
+        <CompanyID xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">812345676 RT 0001</CompanyID>
+        <TaxScheme>
+          <ID xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">VAT</ID>
+        </TaxScheme>
+      </PartyTaxScheme>
+    </Party>
+  </AccountingSupplierParty>
+  <TaxTotal xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2">
+    <TaxAmount xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" currencyID="CAD">28.76</TaxAmount>
+    <TaxSubtotal>
+      <TaxableAmount xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" currencyID="CAD">221.24</TaxableAmount>
+      <TaxAmount xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" currencyID="CAD">28.76</TaxAmount>
+      <TaxCategory>
+        <ID xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">S</ID>
+        <Percent xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">13</Percent>
+        <TaxScheme>
+          <ID xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">VAT</ID>
+        </TaxScheme>
+      </TaxCategory>
+    </TaxSubtotal>
+  </TaxTotal>
+  <LegalMonetaryTotal xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2">
+    <LineExtensionAmount xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" currencyID="CAD">221.24</LineExtensionAmount>
+    <TaxExclusiveAmount xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" currencyID="CAD">221.24</TaxExclusiveAmount>
+    <TaxInclusiveAmount xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" currencyID="CAD">250.00</TaxInclusiveAmount>
+    <PayableAmount xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" currencyID="CAD">250.00</PayableAmount>
+  </LegalMonetaryTotal>
+  <InvoiceLine xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2">
+    <ID xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">1</ID>
+    <InvoicedQuantity xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" unitCode="EA">1</InvoicedQuantity>
+    <LineExtensionAmount xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" currencyID="CAD">150.00</LineExtensionAmount>
+    <Item>
+      <Name xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">Business cards, 500 pcs</Name>
+      <ClassifiedTaxCategory>
+        <ID xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">S</ID>
+        <Percent xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">13</Percent>
+        <TaxScheme>
+          <ID xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">VAT</ID>
+        </TaxScheme>
+      </ClassifiedTaxCategory>
+    </Item>
+    <Price>
+      <PriceAmount xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" currencyID="CAD">150.00</PriceAmount>
+    </Price>
+  </InvoiceLine>
+  <InvoiceLine xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2">
+    <ID xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">2</ID>
+    <InvoicedQuantity xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" unitCode="EA">1</InvoicedQuantity>
+    <LineExtensionAmount xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" currencyID="CAD">71.24</LineExtensionAmount>
+    <Item>
+      <Name xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">Letterhead, 250 sheets</Name>
+      <ClassifiedTaxCategory>
+        <ID xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">S</ID>
+        <Percent xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">13</Percent>
+        <TaxScheme>
+          <ID xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">VAT</ID>
+        </TaxScheme>
+      </ClassifiedTaxCategory>
+    </Item>
+    <Price>
+      <PriceAmount xmlns="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" currencyID="CAD">71.24</PriceAmount>
+    </Price>
+  </InvoiceLine>
+</Invoice>

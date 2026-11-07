@@ -44,6 +44,7 @@
     "clean": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
     "schema": "node scripts/generate-schema.ts",
     "docs:rules": "node scripts/gen-rules-doc.ts",
+    "test:peppol": "node scripts/fetch-peppol-examples.ts && vitest run test/peppol.test.ts",
     "build": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\" && tsup",
     "dev": "tsup --watch",
     "test": "vitest run",
