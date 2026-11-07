@@ -21,6 +21,7 @@
  */
 import type { Province } from '../../model.ts';
 
+/** Where the rate table was transcribed from, and when. */
 export const RATES_SOURCE = {
   title: 'GST/HST calculator (and rates)',
   url: 'https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/charge-collect-which-rate/calculator.html',
@@ -32,8 +33,10 @@ export const RATES_SOURCE = {
 /** Rate checks run for invoices dated on or after this date. */
 export const COVERAGE_FROM = '2017-01-01';
 
+/** GST (federal) or HST (harmonized, participating provinces). */
 export type RateType = 'GST' | 'HST';
 
+/** One rate for one province or territory over a period. */
 export interface RateEntry {
   jurisdiction: Province;
   type: RateType;
@@ -68,6 +71,7 @@ const SOURCE_ROWS: Record<Province, [RateType, string, string]> = {
   YT: ['GST', '5', '5'],
 };
 
+/** The dated GST/HST rate table, one entry per province per period. */
 export const RATE_TABLE: readonly RateEntry[] = Object.entries(SOURCE_ROWS).flatMap(
   ([jurisdiction, [type, ...rates]]) =>
     PERIODS.map((period, i) => ({

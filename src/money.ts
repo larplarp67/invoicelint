@@ -11,6 +11,7 @@ export type Cents = number;
 /** How to round a result that falls exactly halfway between two cents. */
 export type Rounding = 'half-away-from-zero' | 'half-even';
 
+/** A parse that either succeeded with a value or failed with a reason. */
 export type ParseResult<T> = { ok: true; value: T } | { ok: false; reason: string };
 
 // Optional sign, optional "$", digits with optional comma grouping, optional fraction.

@@ -11,6 +11,7 @@
  *    with that encoding instead.
  */
 
+/** Result of {@link decodeInvoiceBytes}: the text and the encoding used, or why it failed. */
 export type DecodeResult =
   { ok: true; text: string; encoding: string } | { ok: false; reason: string };
 
@@ -18,6 +19,7 @@ function decode(bytes: Uint8Array, label: string, offset = 0): string {
   return new TextDecoder(label).decode(bytes.subarray(offset));
 }
 
+/** Decode raw file bytes to text: BOM first (UTF-8/UTF-16), then BOM-less UTF-16, then the XML encoding declaration, else UTF-8. Use it before {@link validate} when you have bytes (a file, an upload). */
 export function decodeInvoiceBytes(bytes: Uint8Array): DecodeResult {
   const [b0, b1, b2] = bytes;
   if (b0 === 0xef && b1 === 0xbb && b2 === 0xbf) {

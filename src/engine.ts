@@ -5,6 +5,7 @@ import type { Invoice } from './model.ts';
 import type { EngineOptions, RulePack } from './packs/types.ts';
 import type { Issue } from './types.ts';
 
+/** The result of validating one invoice. */
 export interface ValidationReport {
   /** True when there are no errors. Warnings and infos don't fail a report. */
   ok: boolean;
@@ -22,6 +23,7 @@ export interface ValidationReport {
   infos: Issue[];
 }
 
+/** Default engine options: 1 cent tolerance per tax line, 60-day rate transition window. */
 export const DEFAULT_ENGINE_OPTIONS: EngineOptions = { toleranceCents: 1, rateTransitionDays: 60 };
 
 export function resolveEngineOptions(options: Partial<EngineOptions> = {}): EngineOptions {

@@ -16,9 +16,11 @@
  * confirm that it is actually registered.
  */
 
+/** What can be wrong with a GST/HST registration number. */
 export type RegistrationProblem =
   'length' | 'non-digit' | 'check-digit' | 'wrong-program' | 'bad-reference';
 
+/** The result of {@link validateRegistrationNumber}. */
 export interface RegistrationNumberResult {
   /** True when no problems were found. */
   ok: boolean;

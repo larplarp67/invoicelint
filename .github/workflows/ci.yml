@@ -30,6 +30,8 @@ jobs:
       - name: Rules doc is up to date
         run: pnpm docs:rules --check
       - run: pnpm build
+      - name: Library works in Node (by package name) and in a browser bundle
+        run: pnpm check:dist
       - name: CLI smoke test (JSON and UBL)
         run: |
           node dist/cli.js --version

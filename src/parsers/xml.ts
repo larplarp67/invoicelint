@@ -16,9 +16,11 @@
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
 import type { Issue } from '../types.ts';
 
+/** Default maximum XML input size: 5 MB. */
 export const DEFAULT_MAX_XML_BYTES = 5 * 1024 * 1024;
 export const DEFAULT_MAX_XML_DEPTH = 100;
 
+/** Rule IDs of issues the XML layer can report. */
 export const XML_ISSUES = {
   /** Not well-formed XML (or an undeclared namespace prefix). */
   MALFORMED: 'PARSE-UBL-002',

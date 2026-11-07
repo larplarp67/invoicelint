@@ -70,6 +70,7 @@ const isoDate = (description: string) =>
 // Enumerations
 // ---------------------------------------------------------------------------
 
+/** Canadian province and territory codes. */
 export const PROVINCES = [
   'AB',
   'BC',
@@ -85,16 +86,21 @@ export const PROVINCES = [
   'SK',
   'YT',
 ] as const;
+/** Zod schema for a province or territory code. */
 export const ProvinceSchema = z
   .enum(PROVINCES)
   .meta({ description: 'Canadian province or territory (two-letter postal code).' });
 
+/** GST/HST statuses a line can state. */
 export const TAX_STATUSES = ['taxable', 'zero-rated', 'exempt'] as const;
+/** Zod schema for a line tax status. */
 export const TaxStatusSchema = z
   .enum(TAX_STATUSES)
   .meta({ description: 'GST/HST status of the supply.' });
 
+/** Kinds of tax a tax line can be. */
 export const TAX_TYPES = ['GST', 'HST', 'PST', 'QST', 'OTHER'] as const;
+/** Zod schema for a tax type. */
 export const TaxTypeSchema = z.enum(TAX_TYPES).meta({
   description:
     'Kind of tax. OTHER = a tax invoicelint does not classify (for example foreign VAT); it counts in the totals but not in GST/HST checks.',
@@ -104,6 +110,7 @@ export const TaxTypeSchema = z.enum(TAX_TYPES).meta({
 // Parts
 // ---------------------------------------------------------------------------
 
+/** Zod schema for the supplier (seller). */
 export const SupplierSchema = z
   .object({
     name: text('Supplier name or the name under which it does business.').optional(),
@@ -115,6 +122,7 @@ export const SupplierSchema = z
   })
   .meta({ description: 'The supplier (seller).' });
 
+/** Zod schema for an intermediary (e.g. a marketplace acting for the supplier). */
 export const IntermediarySchema = z
   .object({
     name: text('Intermediary name or the name under which it does business.').optional(),
@@ -125,6 +133,7 @@ export const IntermediarySchema = z
       "An intermediary in respect of the supply. SOR/91-45 s. 3 accepts the intermediary's name and registration number instead of the supplier's.",
   });
 
+/** Zod schema for the buyer (recipient). */
 export const BuyerSchema = z
   .object({
     name: text(
@@ -134,6 +143,7 @@ export const BuyerSchema = z
   })
   .meta({ description: 'The recipient (buyer).' });
 
+/** Zod schema for one invoice line (supply). */
 export const LineSchema = z
   .object({
     description: text('Description of the supply.').optional(),
@@ -151,6 +161,7 @@ export const LineSchema = z
   })
   .meta({ description: 'One supply (invoice line).' });
 
+/** Zod schema for one tax charged on the invoice. */
 export const TaxSchema = z
   .object({
     type: TaxTypeSchema,
@@ -160,6 +171,7 @@ export const TaxSchema = z
   })
   .meta({ description: 'A tax charged on the invoice.' });
 
+/** Zod schema for a "tax is included in the price" statement. */
 export const TaxIncludedStatementSchema = z
   .object({
     included: z.literal(true).meta({ description: 'Always true when present.' }),
@@ -174,6 +186,7 @@ export const TaxIncludedStatementSchema = z
 // Invoice
 // ---------------------------------------------------------------------------
 
+/** Zod schema for the canonical invoice. Parses input (numbers or decimal strings) into integer cents. */
 export const InvoiceSchema = z
   .object({
     invoiceNumber: text('Invoice number.').optional(),
@@ -217,16 +230,26 @@ export const InvoiceSchema = z
 export type Invoice = z.output<typeof InvoiceSchema>;
 /** What callers may pass in (amounts as numbers or strings). */
 export type InvoiceInput = z.input<typeof InvoiceSchema>;
+/** A parsed supplier. */
 export type Supplier = Invoice['supplier'];
+/** A parsed intermediary. */
 export type Intermediary = NonNullable<Invoice['intermediary']>;
+/** A parsed buyer. */
 export type Buyer = NonNullable<Invoice['buyer']>;
+/** A parsed invoice line. */
 export type InvoiceLine = Invoice['lines'][number];
+/** A parsed tax line. */
 export type Tax = Invoice['taxes'][number];
+/** A parsed tax-included statement. */
 export type TaxIncludedStatement = NonNullable<Invoice['taxIncludedStatement']>;
+/** A province or territory code, e.g. "ON". */
 export type Province = z.output<typeof ProvinceSchema>;
+/** A line tax status: "taxable", "zero-rated" or "exempt". */
 export type TaxStatus = z.output<typeof TaxStatusSchema>;
+/** A tax type: "GST", "HST", "PST", "QST" or "OTHER". */
 export type TaxType = z.output<typeof TaxTypeSchema>;
 
+/** The `$id` of the published JSON Schema. */
 export const INVOICE_SCHEMA_ID =
   'https://raw.githubusercontent.com/larplarp67/invoicelint/main/schema/invoice.schema.json';
 

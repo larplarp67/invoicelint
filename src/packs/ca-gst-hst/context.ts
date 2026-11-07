@@ -26,6 +26,7 @@ export type MoneyHelpers = typeof money & {
   amount: (cents: Cents) => string;
 };
 
+/** The context every ca-gst-hst rule receives. */
 export interface CaContext extends RuleContext {
   tier: Tier;
   /**

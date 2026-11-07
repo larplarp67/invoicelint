@@ -2,6 +2,7 @@
 import { caGstHstPack } from './ca-gst-hst/index.ts';
 import type { RulePack } from './types.ts';
 
+/** The rule packs that ship with invoicelint. */
 export const BUILTIN_PACKS: readonly RulePack[] = [caGstHstPack];
 
 /** Look up built-in packs by ID. Throws on an unknown ID (programmer or usage error). */

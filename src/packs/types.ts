@@ -41,6 +41,7 @@ export interface RuleMeta {
   appliesFromTier?: number;
 }
 
+/** A rule: its metadata plus the check that produces issues. */
 export interface Rule<C extends RuleContext = RuleContext> extends RuleMeta {
   check(ctx: C): Issue[];
 }
@@ -81,6 +82,7 @@ export function defineRule<C extends RuleContext>(
   };
 }
 
+/** A set of rules for one jurisdiction or standard, run by the engine. */
 export interface RulePack<C extends RuleContext = RuleContext> {
   /** e.g. "ca-gst-hst" */
   id: string;

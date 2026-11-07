@@ -1,7 +1,9 @@
 /** Shared result types used by parsers, rule packs and the engine. */
 
+/** How serious an issue is: error (wrong data), warning (information missing from this document), info (context). */
 export type Severity = 'error' | 'warning' | 'info';
 
+/** One finding: what is wrong, where, how to fix it, and the legal source. */
 export interface Issue {
   /** Stable identifier, e.g. "PARSE-003" or "CA-ITC-001". */
   ruleId: string;

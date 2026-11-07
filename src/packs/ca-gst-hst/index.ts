@@ -9,6 +9,7 @@ import { mathRules } from './rules/math.ts';
 import { rateRules } from './rules/rates.ts';
 import { currencyNotCad, thresholdsChanged, tierDetected } from './rules/tier.ts';
 
+/** The Canadian GST/HST rule pack: input tax credit information (SOR/91-45 s.3), registration numbers, tax math and rates. */
 export const caGstHstPack: RulePack<CaContext> = {
   id: 'ca-gst-hst',
   version: '0.1.0',

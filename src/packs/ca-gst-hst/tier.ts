@@ -7,6 +7,7 @@
  */
 import type { Cents } from '../../money.ts';
 
+/** An information tier under SOR/91-45 s.3: 1 (under $100), 2 ($100–$499.99), 3 ($500 or more). */
 export type Tier = 1 | 2 | 3;
 
 /** s.3(b): "$100 or more and less than $500". */
@@ -20,6 +21,7 @@ export const TIER3_FROM_CENTS: Cents = 50_000;
  */
 export const THRESHOLDS_IN_FORCE_FROM = '2021-04-20';
 
+/** The tier for a total including tax, in integer cents. */
 export function computeTier(totalCents: Cents): Tier {
   if (totalCents >= TIER3_FROM_CENTS) return 3;
   if (totalCents >= TIER2_FROM_CENTS) return 2;

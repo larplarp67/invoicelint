@@ -17,8 +17,10 @@ import { DEFAULT_MAX_XML_BYTES } from './parsers/xml.ts';
 /** Keep in step with package.json; test/smoke.test.ts fails if they differ. */
 export const VERSION = '0.1.0';
 
+/** Input formats `validate()` can parse. */
 export type InputFormat = 'json' | 'ubl';
 
+/** Options for {@link validate}. */
 export interface ValidateOptions {
   /**
    * Input format. "auto" (default): a string starting with "<" (after
@@ -41,16 +43,24 @@ export interface ValidateOptions {
   rateTransitionDays?: number;
 }
 
-/**
- * Validate an invoice and return a report. Never throws on bad invoice data;
- * throws only on programmer errors (unknown pack ID, bad option values,
- * wrong argument types).
- */
 /** Guess the input format: XML if a string starts with "<" (after whitespace / BOM). */
 export function detectFormat(input: string | object): InputFormat {
   return typeof input === 'string' && /^\uFEFF?\s*</.test(input) ? 'ubl' : 'json';
 }
 
+/**
+ * Validate an invoice and return a report.
+ *
+ * Accepts a JSON string, a parsed object, or UBL 2.1 XML (detected
+ * automatically). Never throws on bad invoice data: parse problems come back
+ * as errors in the report. Throws only on programmer errors (unknown pack ID,
+ * bad option values, wrong argument types).
+ *
+ * @example
+ * import { validate } from 'invoicelint';
+ * const report = validate(invoiceJsonOrXml);
+ * if (!report.ok) console.log(report.errors);
+ */
 export function validate(input: string | object, options: ValidateOptions = {}): ValidationReport {
   // Typed as string: plain-JS callers can pass anything.
   const requested: string = options.format ?? 'auto';
@@ -143,3 +153,19 @@ export {
   type Tier,
   computeTier,
 } from './packs/ca-gst-hst/tier.ts';
+export {
+  EXIT_CODES,
+  type FileResult,
+  type FileStatus,
+  INPUT_ISSUES,
+  JSON_OUTPUT_SCHEMA_VERSION,
+  type JsonFileOutput,
+  type JsonOutput,
+  type JudgeOptions,
+  type Summary,
+  exitCode,
+  fileStatus,
+  summarize,
+  toJsonOutput,
+} from './output.ts';
+export { fieldLabel } from './labels.ts';

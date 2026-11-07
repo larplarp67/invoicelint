@@ -23,6 +23,7 @@ import {
   textOf,
 } from './xml.ts';
 
+/** UBL 2.1 namespace URIs. */
 export const UBL_NS = {
   INVOICE: 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2',
   CREDIT_NOTE: 'urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2',
@@ -30,6 +31,7 @@ export const UBL_NS = {
   CBC: 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2',
 } as const;
 
+/** Rule IDs of issues the UBL parser can report. */
 export const UBL_ISSUES = {
   /** Root element is not a UBL 2.1 Invoice. */
   NOT_INVOICE: 'PARSE-UBL-001',
@@ -47,9 +49,11 @@ export const UBL_ISSUES = {
   REQUIRED: 'PARSE-UBL-031',
 } as const;
 
+/** Result of {@link parseUblInvoice}: the invoice plus parser notes, or why it could not be parsed. */
 export type UblParseResult =
   { ok: true; invoice: Invoice; issues: Issue[] } | { ok: false; parseErrors: Issue[] };
 
+/** Options for {@link parseUblInvoice}. */
 export interface UblOptions {
   /** Maximum input size in bytes. Default 5 MB. */
   maxBytes?: number;
