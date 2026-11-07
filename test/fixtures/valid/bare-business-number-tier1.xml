@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- UBL twin of bare-business-number-tier1.json: the equivalence test asserts both produce the same findings. Fictional parties; synthetic Luhn-valid GST/HST numbers. -->
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <cbc:CustomizationID>urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0</cbc:CustomizationID>
+  <cbc:ProfileID>urn:fdc:peppol.eu:2017:poacc:billing:01:1.0</cbc:ProfileID>
+  <cbc:ID>R-20260312-0087</cbc:ID>
+  <cbc:IssueDate>2026-03-12</cbc:IssueDate>
+  <cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>
+  <cbc:DocumentCurrencyCode>CAD</cbc:DocumentCurrencyCode>
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyName>
+        <cbc:Name>Chinook Office Supply</cbc:Name>
+      </cac:PartyName>
+      <cac:PostalAddress>
+        <cbc:StreetName>100 Example St</cbc:StreetName>
+        <cbc:CityName>Example City</cbc:CityName>
+        <cbc:PostalZone>A1A 1A1</cbc:PostalZone>
+        <cbc:CountrySubentity>AB</cbc:CountrySubentity>
+        <cac:Country>
+          <cbc:IdentificationCode>CA</cbc:IdentificationCode>
+        </cac:Country>
+      </cac:PostalAddress>
+      <cac:PartyTaxScheme>
+        <cbc:CompanyID>812345676</cbc:CompanyID>
+        <cac:TaxScheme>
+          <cbc:ID>VAT</cbc:ID>
+        </cac:TaxScheme>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="CAD">2.14</cbc:TaxAmount>
+    <cac:TaxSubtotal>
+      <cbc:TaxableAmount currencyID="CAD">42.86</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="CAD">2.14</cbc:TaxAmount>
+      <cac:TaxCategory>
+        <cbc:ID>S</cbc:ID>
+        <cbc:Percent>5</cbc:Percent>
+        <cac:TaxScheme>
+          <cbc:ID>VAT</cbc:ID>
+        </cac:TaxScheme>
+      </cac:TaxCategory>
+    </cac:TaxSubtotal>
+  </cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="CAD">42.86</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="CAD">42.86</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="CAD">45.00</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="CAD">45.00</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+  <cac:InvoiceLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="EA">1</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="CAD">42.86</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Name>Printer ink cartridge, black</cbc:Name>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="CAD">42.86</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>
+</Invoice>

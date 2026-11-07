@@ -100,4 +100,29 @@ export const registrationNumberProgram = defineRule<CaContext>(
   },
 );
 
-export const bnRules = [registrationNumberFormat, registrationNumberProgram];
+export const businessNumberOnly = defineRule<CaContext>(
+  {
+    id: 'CA-BN-003',
+    severity: 'warning',
+    title: 'Full GST/HST number shown, not only the 9-digit Business Number',
+    citation: 'SOR/91-45 s.3(b)(i)',
+    // Tier 1 needs no registration number at all (s.3(a)), so a bare BN there
+    // is not missing information.
+    appliesFromTier: 2,
+    fix: 'Ask the supplier for its full GST/HST number: the 9-digit Business Number followed by RT and a 4-digit reference.',
+  },
+  ({ invoice }, report) => {
+    for (const shown of shownNumbers(invoice)) {
+      const result = validateRegistrationNumber(shown.value);
+      // Only a well-formed BN with nothing after it; malformed ones are CA-BN-001.
+      if (!result.ok || result.program !== undefined) continue;
+      report({
+        field: shown.field,
+        message:
+          'Only the 9-digit Business Number is shown. The GST/HST registration number is the BN plus RT and a 4-digit reference (e.g. 123456789RT0001).',
+      });
+    }
+  },
+);
+
+export const bnRules = [registrationNumberFormat, registrationNumberProgram, businessNumberOnly];

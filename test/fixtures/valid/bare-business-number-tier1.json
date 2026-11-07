@@ -1,0 +1,33 @@
+{
+  "$comment": "$45.00 receipt showing only the 9-digit Business Number. Tier 1 needs no registration number, so there is no CA-BN-003. Fictional parties; synthetic Luhn-valid GST/HST numbers.",
+  "$expect": {
+    "findings": [],
+    "tier": 1
+  },
+  "invoiceNumber": "R-20260312-0087",
+  "issueDate": "2026-03-12",
+  "currency": "CAD",
+  "supplier": {
+    "name": "Chinook Office Supply",
+    "province": "AB",
+    "gstHstNumber": "812345676"
+  },
+  "lines": [
+    {
+      "description": "Printer ink cartridge, black",
+      "quantity": 1,
+      "unitPrice": "42.86",
+      "lineTotal": "42.86"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "GST",
+      "rate": 5,
+      "taxableAmount": "42.86",
+      "amount": "2.14"
+    }
+  ],
+  "subtotal": "42.86",
+  "total": "45.00"
+}

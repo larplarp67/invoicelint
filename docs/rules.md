@@ -32,6 +32,7 @@ An invoice passes when it has no errors. Warnings do not make it fail.
 | CA-ITC-022 | warning | 3 | A description of each item, specific enough to identify it | SOR/91-45 s.3(c)(iv) |
 | CA-BN-001 | error | all | GST/HST number has the right format and check digit | SOR/91-45 s.3(b)(i) |
 | CA-BN-002 | error | all | Number is a GST/HST number (RT), not another CRA account | SOR/91-45 s.3(b)(i) |
+| CA-BN-003 | warning | 2+ | Full GST/HST number shown, not only the 9-digit Business Number | SOR/91-45 s.3(b)(i) |
 | CA-MATH-001 | error | all | Line amounts add up to the subtotal | Arithmetic check (not a legal requirement) |
 | CA-MATH-002 | error | all | Subtotal, less allowances, plus charges and taxes, equals the total | Arithmetic check (not a legal requirement) |
 | CA-MATH-003 | error | all | Tax amount equals rate × taxable amount | ETA s.165(1), (2) |
@@ -56,6 +57,7 @@ An invoice passes when it has no errors. Warnings do not make it fail.
 - **CA-ITC-022**: Ask the supplier for a description that identifies what was supplied (for example "Laptop repair, 2 hours" rather than "Services").
 - **CA-BN-001**: Compare the number with the supplier's records or the CRA GST/HST Registry, and ask for a corrected invoice if it's wrong.
 - **CA-BN-002**: Ask the supplier for its GST/HST number: the one with RT after the first 9 digits.
+- **CA-BN-003**: Ask the supplier for its full GST/HST number: the 9-digit Business Number followed by RT and a 4-digit reference.
 - **CA-MATH-001**: Check the lines and the subtotal against the supplier's records and ask for a corrected invoice.
 - **CA-MATH-002**: Check the subtotal, taxes and total against the supplier's records and ask for a corrected invoice.
 - **CA-MATH-003**: Recalculate the tax at the stated rate and ask the supplier for a corrected invoice if it differs.

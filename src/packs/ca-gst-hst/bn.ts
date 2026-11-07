@@ -5,7 +5,7 @@
  * the program identifier "RT", and a 4-digit reference number, e.g.
  * 123456789RT0001. A bare 9-digit BN is also accepted here (structurally valid),
  * since it identifies the business. Whether a bare BN is enough on an invoice
- * is a rule decision, not a format decision.
+ * is a rule decision: CA-BN-003 warns about it from tier 2.
  *
  * Check digit: the CRA does not publish a check-digit algorithm for the BN. The
  * last of the 9 digits behaves as a Luhn (mod 10) check digit, and this matches

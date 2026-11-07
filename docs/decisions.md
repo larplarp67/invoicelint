@@ -4,9 +4,17 @@ This file records non-obvious decisions and open questions. Newest entries go at
 
 ## Open questions
 
-### Bare 9-digit BN on a tier-2+ invoice
+_None at the moment. Answers to the earlier ones are recorded under "Maintainer answers (2026-11-07)"._
 
-A GST/HST registration number is the 15-character RT account (`123456789RT0001`). `bn.ts` accepts a bare 9-digit BN as well-formed (Phase 2 spec), so an invoice showing only the BN passes CA-ITC-010 and CA-BN-001. Should a bare BN get its own finding (for example an info: "shows the business number but not the RT account")?
+## Maintainer answers (2026-11-07)
+
+### Bare 9-digit BN: CA-BN-003 (warning)
+
+A GST/HST registration number is the BN plus `RT` and a 4-digit reference (`123456789RT0001`). When a well-formed 9-digit BN is shown with nothing after it, CA-ITC-010 is satisfied (a number is shown) and **CA-BN-003** warns: "Only the 9-digit Business Number is shown…". Implementation choices:
+
+- It applies **from tier 2**. Tier 1 (s.3(a)) needs no registration number, so a bare BN on a small receipt isn't missing information. Fixture `valid/bare-business-number-tier1` covers this.
+- A malformed 9-digit number is CA-BN-001 only, not also CA-BN-003.
+- Severity is warning (information missing from this document), consistent with the severity policy.
 
 ### Credit notes
 
