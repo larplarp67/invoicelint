@@ -1,0 +1,127 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`snapshots (colours off) > json: failing invoice 1`] = `
+"{
+  "schemaVersion": 1,
+  "tool": {
+    "name": "invoicelint",
+    "version": "0.1.0"
+  },
+  "summary": {
+    "files": 1,
+    "passed": 0,
+    "failed": 1,
+    "notChecked": 0,
+    "inputErrors": 0,
+    "errors": 1,
+    "warnings": 0,
+    "strict": false
+  },
+  "files": [
+    {
+      "file": "test/fixtures/invalid/06-registration-number-typo.json",
+      "status": "fail",
+      "format": "json",
+      "tier": 2,
+      "packs": [
+        {
+          "id": "ca-gst-hst",
+          "version": "0.1.0"
+        }
+      ],
+      "errors": [
+        {
+          "ruleId": "CA-BN-001",
+          "severity": "error",
+          "field": "supplier.gstHstNumber",
+          "message": "The supplier's GST/HST number \\"812345677RT0001\\" fails the check-digit test, which usually means a digit was mistyped. A GST/HST number is 9 digits, then RT and 4 digits (e.g. 123456789 RT 0001).",
+          "fix": "Compare the number with the supplier's records or the CRA GST/HST Registry, and ask for a corrected invoice if it's wrong.",
+          "citation": "SOR/91-45 s.3(b)(i)"
+        }
+      ],
+      "warnings": [],
+      "infos": [
+        {
+          "ruleId": "CA-TIER-001",
+          "severity": "info",
+          "field": "total",
+          "message": "Tier 2: the total of $250.00 including tax is between $100 and $499.99. To support an input tax credit, the documents need the supplier's name, the date, the total, the supplier's GST/HST number and the GST/HST charged (SOR/91-45 s.3(b)).",
+          "fix": "No action needed. This tells you which information requirements apply.",
+          "citation": "SOR/91-45 s.3(a), (b), (c)"
+        }
+      ]
+    }
+  ]
+}
+"
+`;
+
+exports[`snapshots (colours off) > json: passing invoice 1`] = `
+"{
+  "schemaVersion": 1,
+  "tool": {
+    "name": "invoicelint",
+    "version": "0.1.0"
+  },
+  "summary": {
+    "files": 1,
+    "passed": 1,
+    "failed": 0,
+    "notChecked": 0,
+    "inputErrors": 0,
+    "errors": 0,
+    "warnings": 0,
+    "strict": false
+  },
+  "files": [
+    {
+      "file": "test/fixtures/valid/tier2-on-invoice-250.json",
+      "status": "pass",
+      "format": "json",
+      "tier": 2,
+      "packs": [
+        {
+          "id": "ca-gst-hst",
+          "version": "0.1.0"
+        }
+      ],
+      "errors": [],
+      "warnings": [],
+      "infos": [
+        {
+          "ruleId": "CA-TIER-001",
+          "severity": "info",
+          "field": "total",
+          "message": "Tier 2: the total of $250.00 including tax is between $100 and $499.99. To support an input tax credit, the documents need the supplier's name, the date, the total, the supplier's GST/HST number and the GST/HST charged (SOR/91-45 s.3(b)).",
+          "fix": "No action needed. This tells you which information requirements apply.",
+          "citation": "SOR/91-45 s.3(a), (b), (c)"
+        }
+      ]
+    }
+  ]
+}
+"
+`;
+
+exports[`snapshots (colours off) > pretty: failing invoice 1`] = `
+"test/fixtures/invalid/06-registration-number-typo.json  JSON · tier 2 · ✗ 1 error, 0 warnings
+
+  Errors (1)
+  ✗ CA-BN-001  Supplier GST/HST number
+    The supplier's GST/HST number "812345677RT0001" fails the check-digit test, which usually means
+    a digit was mistyped. A GST/HST number is 9 digits, then RT and 4 digits (e.g. 123456789 RT
+    0001).
+    Fix: Compare the number with the supplier's records or the CRA GST/HST Registry, and ask for a
+    corrected invoice if it's wrong.
+    SOR/91-45 s.3(b)(i)
+
+1 file · 1 failed · 0 warnings
+"
+`;
+
+exports[`snapshots (colours off) > pretty: passing invoice 1`] = `
+"test/fixtures/valid/tier2-on-invoice-250.json  JSON · tier 2 · ✓ OK
+
+1 file · 0 failed · 0 warnings
+"
+`;
