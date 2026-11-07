@@ -1,7 +1,8 @@
 /** Registry of built-in rule packs. */
+import { caGstHstPack } from './ca-gst-hst/index.ts';
 import type { RulePack } from './types.ts';
 
-export const BUILTIN_PACKS: readonly RulePack[] = [];
+export const BUILTIN_PACKS: readonly RulePack[] = [caGstHstPack];
 
 /** Look up built-in packs by ID. Throws on an unknown ID (programmer or usage error). */
 export function resolvePacks(selection: readonly (string | RulePack)[]): RulePack[] {
