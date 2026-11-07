@@ -1,10 +1,11 @@
 {
-  "$comment": "HST 14% dated 2025-03-15. Nova Scotia only moved from 15% to 14% on 2025-04-01, so no province had 14% that day. Pair of valid/ns-hst-14-after-change. Fictional parties; synthetic Luhn-valid GST/HST numbers.",
+  "$comment": "HST 14% dated 2025-01-15. Nova Scotia only moved from 15% to 14% on 2025-04-01, and this is more than 60 days before, so no province had 14% and it is an error. See invalid/22 for the warning case and valid/ns-hst-14-after-change for the pass. Fictional parties; synthetic Luhn-valid GST/HST numbers.",
   "$expect": {
-    "findings": ["CA-RATE-002"]
+    "findings": ["CA-RATE-002"],
+    "ok": false
   },
   "invoiceNumber": "INV-2001",
-  "issueDate": "2025-03-15",
+  "issueDate": "2025-01-15",
   "currency": "CAD",
   "supplier": {
     "name": "Maple Leaf Printing Inc.",

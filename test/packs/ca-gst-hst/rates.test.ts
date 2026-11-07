@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_ENGINE_OPTIONS } from '../../../src/engine.ts';
+import { taxDate } from '../../../src/packs/ca-gst-hst/context.ts';
 import { caGstHstPack } from '../../../src/packs/ca-gst-hst/index.ts';
 import {
   COVERAGE_FROM,
   RATES_SOURCE,
   RATE_TABLE,
+  changesNear,
+  rateChanges,
   ratesOn,
 } from '../../../src/packs/ca-gst-hst/rates.ts';
 import { byRule, check, findings, tier2 } from '../../helpers/ca.ts';
@@ -52,7 +56,7 @@ describe('rate table', () => {
   });
 
   it('is part of every rule context', () => {
-    const ctx = caGstHstPack.createContext(tier2 as never, { toleranceCents: 1 });
+    const ctx = caGstHstPack.createContext(tier2 as never, DEFAULT_ENGINE_OPTIONS);
     expect(ctx.rates.ratesOn('2025-04-15', 'HST')).toEqual(['13', '14', '15']);
   });
 });
@@ -96,30 +100,71 @@ describe('CA-RATE-001 GST rate', () => {
 });
 
 describe('CA-RATE-002 HST rate', () => {
-  it('errors on HST 14% dated 2025-03-15 (Nova Scotia was still 15%)', () => {
-    const report = check(hstInvoice(14, '2025-03-15'));
+  const rate002 = (inv: ReturnType<typeof hstInvoice>, days?: number) =>
+    byRule(check(inv, undefined, days), 'CA-RATE-002');
+
+  it('errors on HST 14% dated 2025-01-15: more than 60 days before Nova Scotia moved to 14%', () => {
+    const report = check(hstInvoice(14, '2025-01-15'));
     expect(findings(report)).toEqual(['CA-RATE-002']);
-    expect(byRule(report, 'CA-RATE-002')[0]?.message).toBe(
-      'HST is charged at 14%, but on 2025-03-15 no province had an HST rate of 14%. HST rates in force that day: 13% and 15%.',
-    );
+    expect(report.ok).toBe(false);
+    expect(byRule(report, 'CA-RATE-002')[0]).toMatchObject({
+      severity: 'error',
+      message:
+        'HST is charged at 14%, but on 2025-01-15 no province had an HST rate of 14%. HST rates in force that day: 13% and 15%.',
+    });
   });
 
-  it('accepts HST 14% dated 2025-04-15', () => {
+  it('warns on HST 14% dated 2025-03-20: within 60 days of the change', () => {
+    const report = check(hstInvoice(14, '2025-03-20'));
+    expect(findings(report)).toEqual(['CA-RATE-002']);
+    expect(report.ok).toBe(true); // a warning does not fail the report
+    expect(byRule(report, 'CA-RATE-002')[0]).toMatchObject({
+      severity: 'warning',
+      message:
+        'HST is charged at 14%, but on 2025-03-20 no province had an HST rate of 14%. HST rates in force that day: 13% and 15%. Nova Scotia changed from 15% to 14% on 2025-04-01. This invoice is near a rate change; confirm which rate applied.',
+    });
+    expect(byRule(report, 'CA-RATE-002')[0]?.fix).toMatch(/when the tax became payable/);
+  });
+
+  it('accepts HST 15% dated 2025-04-10: still the rate in NB, NL and PE', () => {
+    expect(findings(check(hstInvoice(15, '2025-04-10')))).toEqual([]);
+  });
+
+  it('accepts HST 14% from 2025-04-01 (no finding at all)', () => {
+    expect(findings(check(hstInvoice(14, '2025-04-01')))).toEqual([]);
     expect(findings(check(hstInvoice(14, '2025-04-15')))).toEqual([]);
   });
 
-  it('switches exactly on 2025-04-01', () => {
-    expect(findings(check(hstInvoice(14, '2025-03-31')))).toEqual(['CA-RATE-002']);
-    expect(findings(check(hstInvoice(14, '2025-04-01')))).toEqual([]);
+  it('window edges: 60 days before is a warning, 61 days before is an error', () => {
+    expect(rate002(hstInvoice(14, '2025-01-31'))[0]?.severity).toBe('warning'); // 60 days
+    expect(rate002(hstInvoice(14, '2025-01-30'))[0]?.severity).toBe('error'); // 61 days
+    expect(rate002(hstInvoice(14, '2025-03-31'))[0]?.severity).toBe('warning'); // day before
+  });
+
+  it('the window is configurable', () => {
+    expect(rate002(hstInvoice(14, '2025-03-20'), 0)[0]?.severity).toBe('error');
+    expect(rate002(hstInvoice(14, '2025-01-15'), 90)[0]?.severity).toBe('warning');
+  });
+
+  it('a rate unrelated to any nearby change stays an error', () => {
+    expect(rate002(hstInvoice(12, '2025-03-20'))[0]?.severity).toBe('error');
+    expect(rate002(hstInvoice(12, '2026-01-10'))[0]?.severity).toBe('error');
+  });
+
+  it('uses the tax date: the earlier of the invoice date and the date paid', () => {
+    // Paid (in advance) on 2025-01-10, invoiced 2025-04-15: tax date 2025-01-10.
+    const report = check({ ...hstInvoice(14, '2025-04-15'), taxPaidDate: '2025-01-10' });
+    expect(byRule(report, 'CA-RATE-002')[0]).toMatchObject({ severity: 'error' });
+    expect(byRule(report, 'CA-RATE-002')[0]?.message).toContain('on 2025-01-10');
+  });
+
+  it('uses taxPaidDate when there is no invoice date', () => {
+    const { issueDate: _drop, ...rest } = hstInvoice(14, '2025-01-15');
+    expect(findings(check({ ...rest, taxPaidDate: '2025-01-15' }))).toEqual(['CA-RATE-002']);
   });
 
   it('errors on a rate no province ever had', () => {
     expect(findings(check(hstInvoice(12, '2026-01-10')))).toEqual(['CA-RATE-002']);
-  });
-
-  it('uses taxPaidDate when there is no invoice date', () => {
-    const { issueDate: _drop, ...rest } = hstInvoice(14, '2025-03-15');
-    expect(findings(check({ ...rest, taxPaidDate: '2025-03-15' }))).toEqual(['CA-RATE-002']);
   });
 
   it('does not check PST or QST rates', () => {
@@ -134,6 +179,33 @@ describe('CA-RATE-002 HST rate', () => {
       total: '408.00',
     });
     expect(findings(report)).toEqual([]);
+  });
+});
+
+describe('tax date and rate changes', () => {
+  it.each([
+    [{ issueDate: '2025-04-15', taxPaidDate: '2025-01-10' }, '2025-01-10', 'taxPaidDate'],
+    [{ issueDate: '2025-01-10', taxPaidDate: '2025-04-15' }, '2025-01-10', 'issueDate'],
+    [{ issueDate: '2025-01-10', taxPaidDate: '2025-01-10' }, '2025-01-10', 'issueDate'],
+    [{ issueDate: '2025-01-10' }, '2025-01-10', 'issueDate'],
+    [{ taxPaidDate: '2025-01-10' }, '2025-01-10', 'taxPaidDate'],
+    [{}, undefined, 'issueDate'],
+  ])('%j -> %s (%s)', (dates, date, field) => {
+    expect(
+      taxDate({ total: 0, currency: 'CAD', supplier: {}, lines: [], taxes: [], ...dates }),
+    ).toEqual({
+      date,
+      dateField: field,
+    });
+  });
+
+  it('finds the one real change in the table: Nova Scotia 15% -> 14% on 2025-04-01', () => {
+    expect(rateChanges()).toEqual([
+      { jurisdiction: 'NS', type: 'HST', from: '15', to: '14', effectiveFrom: '2025-04-01' },
+    ]);
+    expect(changesNear('2025-03-20', 'HST', 60)).toHaveLength(1);
+    expect(changesNear('2025-03-20', 'GST', 60)).toEqual([]);
+    expect(changesNear('2024-12-01', 'HST', 60)).toEqual([]);
   });
 });
 

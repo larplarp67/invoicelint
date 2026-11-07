@@ -29,8 +29,8 @@ export type MoneyHelpers = typeof money & {
 export interface CaContext extends RuleContext {
   tier: Tier;
   /**
-   * Date used for date-dependent checks: the invoice date, or the date tax was
-   * paid or payable when there is no invoice date.
+   * Tax date for date-dependent checks: the earlier of the invoice date and
+   * the date tax was paid (ETA s.168(1)). See taxDate().
    */
   date: string | undefined;
   /** Name of the field `date` came from, for issue paths. */
@@ -40,16 +40,26 @@ export interface CaContext extends RuleContext {
   rates: typeof rates;
 }
 
+/**
+ * The tax date: the earlier of the invoice date and the date tax was paid.
+ * ETA s.168(1): tax is payable on the earlier of the day the consideration is
+ * paid and the day it becomes due (usually the invoice date).
+ */
+export function taxDate(invoice: Invoice): Pick<CaContext, 'date' | 'dateField'> {
+  const { issueDate, taxPaidDate } = invoice;
+  if (issueDate !== undefined && (taxPaidDate === undefined || issueDate <= taxPaidDate)) {
+    return { date: issueDate, dateField: 'issueDate' };
+  }
+  if (taxPaidDate !== undefined) return { date: taxPaidDate, dateField: 'taxPaidDate' };
+  return { date: undefined, dateField: 'issueDate' };
+}
+
 export function createCaContext(invoice: Invoice, options: EngineOptions): CaContext {
   return {
     invoice,
     options,
     tier: computeTier(invoice.total),
-    date: invoice.issueDate ?? invoice.taxPaidDate,
-    dateField:
-      invoice.issueDate === undefined && invoice.taxPaidDate !== undefined
-        ? 'taxPaidDate'
-        : 'issueDate',
+    ...taxDate(invoice),
     money: { ...money, amount: (cents) => formatAmount(cents, invoice.currency) },
     rates,
   };

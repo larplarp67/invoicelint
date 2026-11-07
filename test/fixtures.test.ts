@@ -6,6 +6,7 @@
  *   findings: exact set of error/warning rule IDs (empty = none allowed)
  *   infos:    rule IDs that must appear among the infos
  *   tier:     expected tier
+ *   ok:       expected report.ok (errors vs warnings only)
  * Valid fixtures default to { findings: [] } and must also add up exactly.
  */
 import { readFileSync, readdirSync } from 'node:fs';
@@ -23,6 +24,8 @@ interface Expectation {
   findings: string[];
   infos?: string[];
   tier?: number;
+  /** Expected report.ok (no errors). */
+  ok?: boolean;
 }
 
 interface Fixture {
@@ -67,6 +70,7 @@ function assertExpectation(f: Fixture): void {
   const infoIds = report.infos.map((i) => i.ruleId);
   for (const id of f.expect.infos ?? []) expect(infoIds, `info ${id}`).toContain(id);
   if (f.expect.tier !== undefined) expect(report.tier).toBe(f.expect.tier);
+  if (f.expect.ok !== undefined) expect(report.ok, 'report.ok').toBe(f.expect.ok);
 }
 
 describe('invalid fixtures (each asserts its exact rule IDs)', () => {

@@ -22,14 +22,15 @@ export interface ValidationReport {
   infos: Issue[];
 }
 
-export const DEFAULT_ENGINE_OPTIONS: EngineOptions = { toleranceCents: 1 };
+export const DEFAULT_ENGINE_OPTIONS: EngineOptions = { toleranceCents: 1, rateTransitionDays: 60 };
 
 export function resolveEngineOptions(options: Partial<EngineOptions> = {}): EngineOptions {
   const resolved = { ...DEFAULT_ENGINE_OPTIONS, ...options };
-  if (!Number.isSafeInteger(resolved.toleranceCents) || resolved.toleranceCents < 0) {
-    throw new RangeError(
-      `toleranceCents must be a non-negative integer, got ${String(resolved.toleranceCents)}`,
-    );
+  for (const key of ['toleranceCents', 'rateTransitionDays'] as const) {
+    const value = resolved[key];
+    if (!Number.isSafeInteger(value) || value < 0) {
+      throw new RangeError(`${key} must be a non-negative integer, got ${String(value)}`);
+    }
   }
   return resolved;
 }

@@ -8,6 +8,22 @@ _None at the moment. Answers to the earlier ones are recorded under "Maintainer 
 
 ## Maintainer answers (2026-11-07)
 
+### Tax date and a transition window around rate changes
+
+**Tax date** = the earlier of `issueDate` and `taxPaidDate` (when present). This follows ETA s.168(1): tax "is payable … on the earlier of the day the consideration for the supply is paid and the day the consideration for the supply becomes due" (checked on laws-lois.justice.gc.ca). The invoice date stands in for "becomes due". Rate checks (CA-RATE-001/002/003) and CA-TIER-002 use this date.
+
+**Transition window.** For every rate change in `rates.ts` (consecutive periods of a province with different rates; today only Nova Scotia 15% → 14% on 2025-04-01), the old and the new rate are both accepted within `rateTransitionDays` (default **60**, configurable via `validate()` and `--rate-window-days`) of the change's effective date:
+
+- Rate in force on the tax date in some province → no finding.
+- Not in force, but it is the old or new rate of a change within the window → CA-RATE-002 as a **warning**: "…This invoice is near a rate change; confirm which rate applied." The report stays `ok`.
+- Otherwise → CA-RATE-002 stays an **error**.
+
+The same logic runs for GST (CA-RATE-001), though the table has no GST change. Window edges are inclusive: with 60 days, 2025-01-31 (60 days before) warns and 2025-01-30 (61 days) errors.
+
+**This is a simplification of the transitional rules, not an implementation of them.** The real rules (e.g. for Nova Scotia 2025) decide the rate from when consideration was paid or became due, with special cases for continuous supplies, real property and so on. An invoice often doesn't show enough to apply them, so a fixed window that downgrades to a warning is a pragmatic stand-in.
+
+Test cases from the maintainer: HST 14% on 2025-01-15 → error; on 2025-03-20 → warning. (The first suggestion, HST 15% on 2025-04-10 → warning, can't happen: 15% is still the rate in New Brunswick, Newfoundland and Labrador and PEI, so it passes. It is tested as "no finding".) Fixture `invalid/12` moved from 2025-03-15 (now inside the window) to 2025-01-15 so it stays the error case; `invalid/22` (2025-03-20) is the warning case. Fixtures can now assert `$expect.ok`.
+
 ### Credit notes: recognized, not checked
 
 A UBL `CreditNote` gives PARSE-UBL-010 (info): "credit notes are recognized but not checked yet". No invoice rules run on it (no tier, no ITC rules), the report is `ok` with no packs, and the CLI prints NOT CHECKED. Credit notes have their own prescribed information under the **Credit Note and Debit Note Information (GST/HST) Regulations**, SOR/91-44. (The maintainer's note said "Credit Note Information (GST/HST) Regulations"; the regulation's actual title, checked on laws-lois.justice.gc.ca, includes "and Debit Note".) A credit note pack is on the README roadmap. A JSON document with a negative total is still checked as an invoice (it lands in tier 1): the JSON model has no credit-note type yet.
@@ -171,9 +187,9 @@ Math and rate rules cite the Excise Tax Act: s.165(1) (GST at 5% on the value of
 
 The table's **New Brunswick** row shows 13% for July–September 2016, but CRA's [Excise and GST/HST News No. 99](https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/news99/news99-excise-gst-hst-news-no-99.html) says "Effective July 1, 2016, the HST rate in New Brunswick would be 15%". That period is outside coverage, so it was left out rather than copied with a likely error. The CRA table could be used back to 2013-04-01 once that row is corrected.
 
-### Rate checks use the invoice date, against any province
+### Rate checks use the tax date, against any province
 
-The date for rate checks is `issueDate`, else `taxPaidDate`. Transition rules (e.g. Nova Scotia 2025) tie the rate to when consideration is paid or becomes due, which usually matches the invoice date; an invoice for consideration that became due before a change could legitimately show the old rate. Place of supply isn't determined yet, so an HST rate passes if **any** province had it on that date (`2025-03-15`: 13% or 15%; `2025-04-15`: 13%, 14% or 15%). PST and QST rates aren't checked.
+_Superseded in part by "Tax date and a transition window" above._ The date for rate checks was `issueDate`, else `taxPaidDate`; it is now the earlier of the two. Transition rules (e.g. Nova Scotia 2025) tie the rate to when consideration is paid or becomes due, which usually matches the invoice date; an invoice for consideration that became due before a change could legitimately show the old rate. Place of supply isn't determined yet, so an HST rate passes if **any** province had it on that date (`2025-03-15`: 13% or 15%; `2025-04-15`: 13%, 14% or 15%). PST and QST rates aren't checked.
 
 ### Pack selection
 

@@ -3,7 +3,7 @@
  * spawning processes. src/cli.ts is the thin executable entry point.
  */
 import { glob, readFile, stat } from 'node:fs/promises';
-import { Command, CommanderError, Option } from 'commander';
+import { Command, CommanderError, InvalidArgumentError, Option } from 'commander';
 import type { ValidationReport } from '../engine.ts';
 import { decodeInvoiceBytes } from '../decode.ts';
 import { VERSION, validate } from '../index.ts';
@@ -70,6 +70,7 @@ interface CheckOptions {
   format: 'pretty' | 'json';
   formatIn: 'auto' | 'json' | 'ubl';
   pack?: string[];
+  rateWindowDays?: number;
 }
 
 interface FileResult {
@@ -129,6 +130,7 @@ async function check(args: string[], opts: CheckOptions, io: CliIo): Promise<num
       const report = validate(text, {
         format: opts.formatIn,
         ...(opts.pack ? { packs: opts.pack } : {}),
+        ...(opts.rateWindowDays === undefined ? {} : { rateTransitionDays: opts.rateWindowDays }),
       });
       results.push({ file, report });
     } catch (err) {
@@ -183,6 +185,14 @@ export async function runCli(args: readonly string[], io: CliIo = nodeIo): Promi
           .map((s) => s.trim())
           .filter((s) => s !== ''),
       ],
+    )
+    .option(
+      '--rate-window-days <days>',
+      'days either side of a GST/HST rate change in which both rates are accepted, with a warning (default 60)',
+      (value: string) => {
+        if (!/^\d+$/.test(value)) throw new InvalidArgumentError('must be a whole number of days');
+        return Number(value);
+      },
     )
     .exitOverride()
     .action(async (files: string[], opts: CheckOptions) => {

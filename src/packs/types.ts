@@ -10,6 +10,11 @@ import type { Issue, Severity } from '../types.ts';
 export interface EngineOptions {
   /** Allowed rounding difference per tax line, in cents. */
   toleranceCents: number;
+  /**
+   * Days either side of a tax-rate change during which both the old and the
+   * new rate are accepted (with a warning). Used by ca-gst-hst.
+   */
+  rateTransitionDays: number;
 }
 
 /** What every rule's context has. Packs extend it with their own helpers. */

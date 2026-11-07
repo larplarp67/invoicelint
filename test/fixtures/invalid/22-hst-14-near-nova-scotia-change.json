@@ -1,0 +1,33 @@
+{
+  "$comment": "HST 14% dated 2025-03-20: no province had 14% that day, but it is within 60 days of Nova Scotia's change to 14% (2025-04-01), so CA-RATE-002 is a warning (\"near a rate change\") and the report is still ok. Fictional parties; synthetic Luhn-valid GST/HST numbers.",
+  "$expect": {
+    "findings": ["CA-RATE-002"],
+    "ok": true
+  },
+  "invoiceNumber": "INV-2022",
+  "issueDate": "2025-03-20",
+  "currency": "CAD",
+  "supplier": {
+    "name": "Maple Leaf Printing Inc.",
+    "gstHstNumber": "812345676RT0001",
+    "province": "NS",
+    "address": "100 Example St, Toronto ON M5V 0A1"
+  },
+  "lines": [
+    {
+      "description": "Brochure printing, 1,000 copies",
+      "lineTotal": "200.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 14,
+      "taxableAmount": "200.00",
+      "amount": "28.00"
+    }
+  ],
+  "subtotal": "200.00",
+  "total": "228.00"
+}

@@ -33,6 +33,11 @@ export interface ValidateOptions {
   packs?: readonly (string | RulePack)[];
   /** Allowed rounding difference per tax line, in cents. Default 1. */
   toleranceCents?: number;
+  /**
+   * Days either side of a GST/HST rate change in which the old and the new
+   * rate are both accepted, with a warning. Default 60.
+   */
+  rateTransitionDays?: number;
 }
 
 /**
@@ -55,9 +60,12 @@ export function validate(input: string | object, options: ValidateOptions = {}):
   if (format === 'ubl' && typeof input !== 'string') {
     throw new TypeError('UBL input must be an XML string.');
   }
-  const engineOptions = resolveEngineOptions(
-    options.toleranceCents === undefined ? {} : { toleranceCents: options.toleranceCents },
-  );
+  const engineOptions = resolveEngineOptions({
+    ...(options.toleranceCents === undefined ? {} : { toleranceCents: options.toleranceCents }),
+    ...(options.rateTransitionDays === undefined
+      ? {}
+      : { rateTransitionDays: options.rateTransitionDays }),
+  });
   const packs = options.packs ? resolvePacks(options.packs) : BUILTIN_PACKS;
 
   const parsed =

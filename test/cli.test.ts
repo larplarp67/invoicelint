@@ -236,6 +236,18 @@ describe('invoicelint CLI', () => {
     expect(m.err()).toContain('encoding "x-made-up"');
   });
 
+  it('--rate-window-days changes the transition window', async () => {
+    const near = join(FIXTURES, 'invalid', '22-hst-14-near-nova-scotia-change.json');
+    const m = memoryIo();
+    expect(await runCli(['check', near], m.io)).toBe(EXIT.OK); // warning only
+    expect(m.out()).toContain('WARN  CA-RATE-002');
+    const m0 = memoryIo();
+    expect(await runCli(['check', '--rate-window-days', '0', near], m0.io)).toBe(EXIT.ISSUES);
+    expect(m0.out()).toContain('ERROR CA-RATE-002');
+    const bad = memoryIo();
+    expect(await runCli(['check', '--rate-window-days', 'ten', near], bad.io)).toBe(EXIT.USAGE);
+  });
+
   it('prints the version (exit 0)', async () => {
     const m = memoryIo();
     expect(await runCli(['--version'], m.io)).toBe(EXIT.OK);

@@ -96,4 +96,77 @@ export function ratesOn(date: string, type: RateType, table = RATE_TABLE): strin
   return [...new Set(rates)].sort((a, b) => Number(a) - Number(b));
 }
 
-export const rates = { table: RATE_TABLE, source: RATES_SOURCE, isCovered, ratesOn } as const;
+/** A change of rate in one province: `from` until the day before `effectiveFrom`, then `to`. */
+export interface RateChange {
+  jurisdiction: Province;
+  type: RateType;
+  from: string;
+  to: string;
+  effectiveFrom: string;
+}
+
+/** Every rate change in the table (consecutive periods of a province with different rates). */
+export function rateChanges(table = RATE_TABLE): RateChange[] {
+  const changes: RateChange[] = [];
+  const byKey = new Map<string, RateEntry[]>();
+  for (const e of table) {
+    const key = `${e.jurisdiction}/${e.type}`;
+    byKey.set(key, [...(byKey.get(key) ?? []), e]);
+  }
+  for (const entries of byKey.values()) {
+    const sorted = [...entries].sort((a, b) => a.effectiveFrom.localeCompare(b.effectiveFrom));
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = sorted[i - 1];
+      const next = sorted[i];
+      if (prev && next && prev.rate !== next.rate) {
+        changes.push({
+          jurisdiction: next.jurisdiction,
+          type: next.type,
+          from: prev.rate,
+          to: next.rate,
+          effectiveFrom: next.effectiveFrom,
+        });
+      }
+    }
+  }
+  return changes;
+}
+
+const RATE_CHANGES = rateChanges();
+
+const dayNumber = (isoDate: string): number => {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  return Date.UTC(y ?? 0, (m ?? 1) - 1, d ?? 1) / 86_400_000;
+};
+
+/** Rate changes of a type whose effective date is within `windowDays` of `date`. */
+export function changesNear(date: string, type: RateType, windowDays: number): RateChange[] {
+  const day = dayNumber(date);
+  return RATE_CHANGES.filter(
+    (c) => c.type === type && Math.abs(dayNumber(c.effectiveFrom) - day) <= windowDays,
+  );
+}
+
+export const PROVINCE_NAMES: Record<Province, string> = {
+  AB: 'Alberta',
+  BC: 'British Columbia',
+  MB: 'Manitoba',
+  NB: 'New Brunswick',
+  NL: 'Newfoundland and Labrador',
+  NS: 'Nova Scotia',
+  NT: 'Northwest Territories',
+  NU: 'Nunavut',
+  ON: 'Ontario',
+  PE: 'Prince Edward Island',
+  QC: 'Quebec',
+  SK: 'Saskatchewan',
+  YT: 'Yukon',
+};
+
+export const rates = {
+  table: RATE_TABLE,
+  source: RATES_SOURCE,
+  isCovered,
+  ratesOn,
+  changesNear,
+} as const;

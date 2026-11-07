@@ -4,10 +4,15 @@ import { validate } from '../../src/index.ts';
 import type { InvoiceInput } from '../../src/model.ts';
 import type { Issue } from '../../src/types.ts';
 
-export function check(input: InvoiceInput | string, toleranceCents?: number): ValidationReport {
+export function check(
+  input: InvoiceInput | string,
+  toleranceCents?: number,
+  rateTransitionDays?: number,
+): ValidationReport {
   return validate(input, {
     packs: ['ca-gst-hst'],
     ...(toleranceCents === undefined ? {} : { toleranceCents }),
+    ...(rateTransitionDays === undefined ? {} : { rateTransitionDays }),
   });
 }
 

@@ -70,7 +70,7 @@ describe('defineRule', () => {
     const [warn] =
       testPack().rules[1]?.check({
         invoice,
-        options: { toleranceCents: 1 },
+        options: { toleranceCents: 1, rateTransitionDays: 60 },
         tier: 2,
       }) ?? [];
     expect(warn).toEqual({

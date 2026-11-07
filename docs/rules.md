@@ -37,8 +37,8 @@ An invoice passes when it has no errors. Warnings do not make it fail.
 | CA-MATH-002 | error | all | Subtotal, less allowances, plus charges and taxes, equals the total | Arithmetic check (not a legal requirement) |
 | CA-MATH-003 | error | all | Tax amount equals rate × taxable amount | ETA s.165(1), (2) |
 | CA-MATH-004 | warning | all | GST/HST charged when every line is exempt or zero-rated | ETA s.165(1), (3) |
-| CA-RATE-001 | error | all | GST rate is the rate in force (5%) | ETA s.165(1) |
-| CA-RATE-002 | error | all | HST rate was in force in some province on the invoice date | ETA s.165(2) |
+| CA-RATE-001 | error | all | GST rate is the rate in force (5%) on the tax date | ETA s.165(1) |
+| CA-RATE-002 | error | all | HST rate was in force in some province on the tax date (warning near a rate change) | ETA s.165(2) |
 | CA-RATE-003 | info | all | GST/HST rate checks skipped (no date, or before 2017) | ETA s.165(1), (2) |
 
 ### Fix hints
