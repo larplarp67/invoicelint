@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Not tax advice
+    url: https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses.html
+    about: For questions about your own GST/HST situation, see the CRA or an accountant. invoicelint is not tax or legal advice.

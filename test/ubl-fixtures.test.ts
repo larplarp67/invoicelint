@@ -167,14 +167,3 @@ describe('UBL edge cases', () => {
     expect(r.ok).toBe(true);
   });
 });
-
-describe('README', () => {
-  it('the UBL example in the README is a valid tier-2 invoice with no findings', () => {
-    const readme = readFileSync(join(import.meta.dirname, '..', 'README.md'), 'utf8');
-    const xml = /```xml\n([\s\S]*?)```/.exec(readme)?.[1];
-    expect(xml).toBeDefined();
-    const r = validate(xml ?? '');
-    expect(r).toMatchObject({ ok: true, format: 'ubl', tier: 2, errors: [], warnings: [] });
-    expect(r.infos.filter((i) => i.ruleId.startsWith('PARSE'))).toEqual([]);
-  });
-});

@@ -1,0 +1,36 @@
+name: Bug report
+description: invoicelint crashed, or reported something wrong about an invoice
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please remove real names, addresses and GST/HST numbers from any invoice you paste.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: input
+    attributes:
+      label: Invoice (anonymized)
+      description: The JSON or XML you checked, or the smallest version of it that shows the problem.
+      render: text
+  - type: textarea
+    id: output
+    attributes:
+      label: Output of `invoicelint check --format json <file>`
+      render: json
+  - type: input
+    id: version
+    attributes:
+      label: invoicelint version (`invoicelint --version`)
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Node.js version and OS
+      placeholder: Node 22.12, Windows 11

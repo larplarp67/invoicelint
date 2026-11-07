@@ -1,0 +1,41 @@
+name: Rule request
+description: Ask for a new check, or a change to an existing rule
+labels: [rule]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every invoicelint rule enforces a specific legal provision, so a rule request must cite one.
+  - type: input
+    id: citation
+    attributes:
+      label: Legal citation
+      description: The exact provision, e.g. "SOR/91-45 s.3(c)(iv)" or "Excise Tax Act s.169(4)(a)".
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Link to the official text
+      placeholder: https://laws-lois.justice.gc.ca/eng/regulations/SOR-91-45/FullText.html
+    validations:
+      required: true
+  - type: textarea
+    id: quote
+    attributes:
+      label: Quote the relevant text
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: check
+    attributes:
+      label: What should invoicelint check?
+      description: Which invoices it applies to (tier, province, ...), what counts as a failure, and whether that is missing information (warning) or wrong data (error).
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example invoice (anonymized)
+      render: json

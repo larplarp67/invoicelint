@@ -6,6 +6,46 @@ This file records non-obvious decisions and open questions. Newest entries go at
 
 _None at the moment. Answers to the earlier ones are recorded under "Maintainer answers (2026-11-07)"._
 
+## Phase 5: CLI, packaging, release prep
+
+### `engines`: Node `>=22.12`, not `>=20`
+
+The phase spec asked for `node >=20`. commander 15, the CLI's runtime dependency, declares `node >=22.12.0`, and Node 20 reached end-of-life in April 2026; the maintainer had chosen Node 22+ in Phase 1. So `engines.node` is `>=22.12` (previously `>=22`, which understated commander's requirement).
+
+### Exit codes and what counts as an input error
+
+`0` ok · `1` issues · `2` usage or input error, with `2` winning over `1` across files. A file is an **input error** when it can't be read (INPUT-001), can't be decoded (INPUT-002), or its parsing failed so no rules ran (any PARSE error that stops parsing, including a JSON document without `total`). Errors reported alongside a parsed invoice (PARSE-UBL-030 currency mismatch, PARSE-UBL-031 for anything but the total) are ordinary errors (`1`), because the invoice was still checked. A credit note (PARSE-UBL-010, info) is "not checked", exit `0`.
+
+### Output format follows the terminal
+
+Pretty output when stdout is a TTY, JSON otherwise (`--format` overrides). Colours follow [no-color.org](https://no-color.org): a non-empty `NO_COLOR` turns them off, `FORCE_COLOR` (not `0`) turns them on, otherwise they follow the TTY. `process.stdout.isTTY` is `undefined`, not `false`, for a pipe; passed straight to picocolors' `createColors()` that means "use the default", which is on for Windows, so colour codes leaked into redirected output. It is coerced to a boolean.
+
+### A stable JSON output shape
+
+`--format json` prints one document: `schemaVersion` (1), `tool`, `summary`, and `files[]` with `status` (`pass` | `fail` | `not-checked` | `input-error`). It is built by `toJsonOutput()` in `src/output.ts`, which is browser-safe and exported, so the playground and a GitHub Action can produce the same document. Documented in [json-output.md](./json-output.md); `schemaVersion` changes only on breaking changes. Infos are always included in JSON; `--verbose` only affects pretty output.
+
+### Pretty output details
+
+- Field paths become labels ("taxes[0].rate" → "Tax line 1 rate") via `fieldLabel()`; the raw path stays in JSON.
+- A "not checked" file shows its infos even without `--verbose`, so the reason (e.g. credit note) is visible.
+- Text wraps at the terminal width, capped at 100 columns; 100 when stdout isn't a terminal (`columns` is undefined there, which first produced one word per line).
+
+### Public API documentation is tested
+
+`test/api-docs.test.ts` uses the TypeScript compiler API to list every export of `src/index.ts` and fails if one lacks its own TSDoc comment. A file-header comment doesn't count: TypeScript attaches it to the first declaration, which is how `Severity` looked documented without being so. The test also found that `validate()` had lost its comment to `detectFormat()` when that was inserted above it in Phase 4.
+
+### Proving the package works in Node and the browser
+
+`pnpm check:dist` (CI, after build) imports `invoicelint` by name in Node (package self-reference through `exports`), and bundles `dist/index.js` with esbuild for `platform: browser`, then runs `validate()` in a `vm` sandbox without `process`, `require` or `Buffer`. The package name is a variable in that script so `tsc` doesn't try to resolve it: `dist/` doesn't exist yet when CI typechecks.
+
+### Demo GIF rendered in CI
+
+VHS needs Go, ttyd and ffmpeg, none of which were installed on the maintainer's machine. Rather than install them, the "Demo GIF" workflow renders `docs/demo.tape` with `charmbracelet/vhs-action` and uploads the GIF, which is then committed. The tape stays the source of truth.
+
+### Docs are tested too
+
+`test/docs.test.ts` checks that the README's sample JSON is real CLI output, the examples in `docs/inputs.md` validate cleanly, the CHANGELOG's rule count matches the pack, and every relative link in the Markdown files points at a file that exists.
+
 ## Maintainer answers (2026-11-07)
 
 ### LICENSE copyright holder
