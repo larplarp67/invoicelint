@@ -82,3 +82,19 @@ export {
   normalize as normalizeRegistrationNumber,
   validateRegistrationNumber,
 } from './packs/ca-gst-hst/bn.ts';
+export { type CaContext, caGstHstPack } from './packs/ca-gst-hst/index.ts';
+export {
+  COVERAGE_FROM as RATE_COVERAGE_FROM,
+  RATES_SOURCE,
+  RATE_TABLE,
+  type RateEntry,
+  type RateType,
+  ratesOn,
+} from './packs/ca-gst-hst/rates.ts';
+export {
+  THRESHOLDS_IN_FORCE_FROM,
+  TIER2_FROM_CENTS,
+  TIER3_FROM_CENTS,
+  type Tier,
+  computeTier,
+} from './packs/ca-gst-hst/tier.ts';

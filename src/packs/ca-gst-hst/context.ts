@@ -2,6 +2,7 @@
 import type { Invoice } from '../../model.ts';
 import { type Cents, formatMoney, multiplyCents, percentOf } from '../../money.ts';
 import type { EngineOptions, RuleContext } from '../types.ts';
+import { rates } from './rates.ts';
 import { type Tier, computeTier } from './tier.ts';
 
 /** Format cents for messages: 123456 -> "$1,234.56", -500 -> "-$5.00". */
@@ -21,6 +22,8 @@ export interface CaContext extends RuleContext {
   /** Name of the field `date` came from, for issue paths. */
   dateField: 'issueDate' | 'taxPaidDate';
   money: typeof money;
+  /** Dated GST/HST rate table and lookups. */
+  rates: typeof rates;
 }
 
 export function createCaContext(invoice: Invoice, options: EngineOptions): CaContext {
@@ -34,6 +37,7 @@ export function createCaContext(invoice: Invoice, options: EngineOptions): CaCon
         ? 'taxPaidDate'
         : 'issueDate',
     money,
+    rates,
   };
 }
 
