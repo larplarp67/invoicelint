@@ -8,6 +8,10 @@ _None at the moment. Answers to the earlier ones are recorded under "Maintainer 
 
 ## Maintainer answers (2026-11-07)
 
+### Credit notes: recognized, not checked
+
+A UBL `CreditNote` gives PARSE-UBL-010 (info): "credit notes are recognized but not checked yet". No invoice rules run on it (no tier, no ITC rules), the report is `ok` with no packs, and the CLI prints NOT CHECKED. Credit notes have their own prescribed information under the **Credit Note and Debit Note Information (GST/HST) Regulations**, SOR/91-44. (The maintainer's note said "Credit Note Information (GST/HST) Regulations"; the regulation's actual title, checked on laws-lois.justice.gc.ca, includes "and Debit Note".) A credit note pack is on the README roadmap. A JSON document with a negative total is still checked as an invoice (it lands in tier 1): the JSON model has no credit-note type yet.
+
 ### Bare 9-digit BN: CA-BN-003 (warning)
 
 A GST/HST registration number is the BN plus `RT` and a 4-digit reference (`123456789RT0001`). When a well-formed 9-digit BN is shown with nothing after it, CA-ITC-010 is satisfied (a number is shown) and **CA-BN-003** warns: "Only the 9-digit Business Number is shown…". Implementation choices:
@@ -15,10 +19,6 @@ A GST/HST registration number is the BN plus `RT` and a 4-digit reference (`1234
 - It applies **from tier 2**. Tier 1 (s.3(a)) needs no registration number, so a bare BN on a small receipt isn't missing information. Fixture `valid/bare-business-number-tier1` covers this.
 - A malformed 9-digit number is CA-BN-001 only, not also CA-BN-003.
 - Severity is warning (information missing from this document), consistent with the severity policy.
-
-### Credit notes
-
-Negative totals (credit notes) are tiered like invoices, so a credit note always lands in tier 1. Credit notes have their own prescribed contents (ETA s.232) and are out of scope for v0.1.
 
 ## Phase 4: UBL input
 

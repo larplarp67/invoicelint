@@ -362,7 +362,7 @@ describe('root element', () => {
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(ids(r.parseErrors)).toEqual(['PARSE-UBL-010:info:']);
-      expect(r.parseErrors[0]?.message).toMatch(/not supported yet/);
+      expect(r.parseErrors[0]?.message).toMatch(/recognized but not checked yet/);
     }
   });
 

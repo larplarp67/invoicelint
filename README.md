@@ -128,6 +128,14 @@ The `ca-gst-hst` pack checks the information a buyer needs to claim GST/HST inpu
 - **error**: wrong data (malformed number, math that doesn't add up, a rate not in force)
 - **info**: the tier detected, and any check that was skipped
 
+## Roadmap
+
+- **Credit note pack** (Credit Note and Debit Note Information (GST/HST) Regulations, SOR/91-44). UBL credit notes are already recognized (PARSE-UBL-010) but not checked.
+- **QST pack** (Revenu Québec's parallel requirements)
+- **US pack** (DBNAlliance) and **EU pack** (EN 16931)
+- **Browser playground**: drop a JSON or XML invoice, see the findings inline
+- **GitHub Action**
+
 ## Development
 
 Requires Node 22+ and pnpm (via [Corepack](https://nodejs.org/api/corepack.html): `corepack enable`).

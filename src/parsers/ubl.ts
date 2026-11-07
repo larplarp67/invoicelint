@@ -33,7 +33,7 @@ export const UBL_NS = {
 export const UBL_ISSUES = {
   /** Root element is not a UBL 2.1 Invoice. */
   NOT_INVOICE: 'PARSE-UBL-001',
-  /** Credit notes are not supported yet. */
+  /** Credit notes are recognized but not checked yet. */
   CREDIT_NOTE: 'PARSE-UBL-010',
   /** Line tax category code other than S, Z or E. */
   TAX_CATEGORY: 'PARSE-UBL-020',
@@ -458,8 +458,8 @@ export function parseUblInvoice(xml: string, options: UblOptions = {}): UblParse
           severity: 'info',
           field: '',
           message:
-            'This is a UBL credit note. Credit notes are not supported yet, so no checks were run.',
-          fix: 'Credit-note support is on the roadmap.',
+            'This is a UBL credit note. Credit notes are recognized but not checked yet, so no invoice rules were run.',
+          fix: 'A credit note pack (Credit Note and Debit Note Information (GST/HST) Regulations, SOR/91-44) is on the roadmap.',
         },
       ],
     };
