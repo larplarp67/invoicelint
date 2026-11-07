@@ -217,7 +217,7 @@ The CRA does not publish a check-digit algorithm for the BN. I found no CRA page
 
 ### 2026-11-07: Bare 9-digit BN is structurally valid
 
-Per the Phase 2 spec, a 9-digit BN alone passes the format check, and any program other than `RT` is `wrong-program`. Whether an invoice showing only the BN (no `RT0001`) satisfies s. 3(b)(i) is left to a Phase 3 rule.
+Per the Phase 2 spec, a 9-digit BN alone passes the format check, and any program other than `RT` is `wrong-program`. Whether an invoice showing only the BN (no `RT0001`) satisfies s. 3(b)(i) is still open: Phase 3 added no rule for it (see "Open questions").
 
 ### 2026-11-07: Split on the program letters, not fixed positions
 
@@ -227,9 +227,9 @@ If characters 10–11 are letters, the number is split there. Otherwise it is sp
 
 _Phase 2 notes; the Phase 3 decisions above take precedence._
 
-- **Tier basis.** See Q4. The tool defaults to the total including tax. This is an interpretation, not a verified CRA position.
-- **Supplier or intermediary.** (a)(i) and (b)(i) accept either the supplier's or an intermediary's name and BN. The model will carry an optional `intermediary` party, and the rules pass if either one has the information.
-- **Date.** (a)(ii) uses the invoice date. (a)(iii) uses the date tax was paid or payable when no invoice is issued. The model will have `issueDate` plus an optional `taxPointDate`.
+- **Tier basis.** The total including tax, confirmed by the maintainer (Q4). The regulation alone doesn't settle it.
+- **Supplier or intermediary.** (a)(i) and (b)(i) accept either the supplier's or an intermediary's name and BN. The model has an optional `intermediary` party; CA-ITC-001 and CA-ITC-010 accept either party (see the CA-ITC-010 decision).
+- **Date.** (a)(ii) uses the invoice date. (a)(iii) uses the date tax was paid or payable when no invoice is issued. The model has `issueDate` and an optional `taxPaidDate`; date-based rules use `issueDate`, else `taxPaidDate`.
 - **Recipient.** (c)(ii) also accepts the name of the recipient's authorized agent or representative.
 - **"Not one document".** Supporting documentation may be spread across several documents (s. 2, definition of "supporting documentation"). Missing ITC fields are therefore reported as warnings ("this document alone does not contain X"), never as errors.
 
