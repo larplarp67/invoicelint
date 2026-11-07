@@ -26,7 +26,9 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm format:check
-      - run: pnpm test
+      - run: pnpm coverage
+      - name: Rules doc is up to date
+        run: pnpm docs:rules --check
       - run: pnpm build
       - name: CLI smoke test
         run: node dist/cli.js --version

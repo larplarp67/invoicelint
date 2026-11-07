@@ -12,8 +12,8 @@
  * table (NB, NL, NS, ON, PE).
  *
  * Not transcribed: the 2013-04-01 to 2016-09-30 columns. Their New Brunswick
- * row shows 13% for July–September 2016, but CRA GST/HST Info Sheet GI-190
- * gives 15% from 2016-07-01. That period is outside the 2017+ coverage, so it
+ * row shows 13% for July–September 2016, but CRA Excise and GST/HST News
+ * No. 99 gives 15% "effective July 1, 2016". That period is outside the 2017+ coverage, so it
  * is left out rather than copied with a likely error (docs/decisions.md).
  *
  * Do not edit rates from memory: re-check the source page and update the

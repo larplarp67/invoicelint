@@ -2,37 +2,88 @@
 
 This file records non-obvious decisions and open questions. Newest entries go at the top of each section.
 
-## Open questions (need a maintainer decision)
+## Open questions
 
-### Q1. Invoices dated before the threshold change
+### Bare 9-digit BN on a tier-2+ invoice
 
-**Verified (primary source).** The `$100` / `$500` thresholds were enacted by the _Fall Economic Statement Implementation Act, 2023_, [S.C. 2024, c. 15](https://laws-lois.justice.gc.ca/eng/AnnualStatutes/2024_15/FullText.html), s. 142(1)–(3). Royal assent was 2024-06-20. Section 142(4): "Subsections (1) to (3) are deemed to have come into force on April 20, 2021." Before that the thresholds were `$30` / `$150` ([s. 3 as of 2014-10-31 to 2024-06-19](https://laws-lois.justice.gc.ca/eng/regulations/SOR-91-45/section-3-20141031.html)). Budget 2021 (2021-04-19) announced the change.
+A GST/HST registration number is the 15-character RT account (`123456789RT0001`). `bn.ts` accepts a bare 9-digit BN as well-formed (Phase 2 spec), so an invoice showing only the BN passes CA-ITC-010 and CA-BN-001. Should a bare BN get its own finding (for example an info: "shows the business number but not the RT account")?
 
-Section 141 of the same Act also replaced the s. 2 definition of **"intermediary"**, deemed in force on the same date (April 20, 2021).
+### Credit notes
 
-Remaining ambiguity: the deeming provision doesn't say whether the new thresholds apply by **invoice date**, **tax-payable date** or **ITC claim date**.
+Negative totals (credit notes) are tiered like invoices, so a credit note always lands in tier 1. Credit notes have their own prescribed contents (ETA s.232) and are out of scope for v0.1.
 
-**Proposal:** use the invoice date (or `taxPointDate` if present). For invoices dated before 2021-04-20, still apply today's tiers, but emit an `info` issue: "invoice predates 2021-04-20; the $30/$150 thresholds may apply instead."
+## Phase 3 rule decisions (maintainer-approved 2026-11-07)
 
-### Q2. Combined GST + PST total (s. 3(b)(iii)(B))
+### Q1 resolved: invoices dated before 2021-04-20
 
-The plan's tier-2 rule says "GST/HST shown separately OR a statement that the total includes tax at a stated rate". The regulation allows a **third** form: where PST applies to every taxable, non-zero-rated supply (and to no exempt or zero-rated supply), the invoice may show **GST + PST combined** with a statement that the total includes GST. This is common on invoices from BC, SK, MB and QC suppliers.
+The `$100` / `$500` thresholds were enacted by [S.C. 2024, c. 15](https://laws-lois.justice.gc.ca/eng/AnnualStatutes/2024_15/FullText.html), s. 142(1)–(3). Section 142(4) deems them in force from **2021-04-20**; before that they were `$30` / `$150` ([s. 3 as of 2014-10-31 to 2024-06-19](https://laws-lois.justice.gc.ca/eng/regulations/SOR-91-45/section-3-20141031.html)). Section 141 replaced the definition of "intermediary" from the same date.
 
-**Proposal:** model it with a `taxPresentation` field (`separate` | `combined-with-pst` | `tax-included`) and accept all three in the tier-2 rule. Each form gets its own citation.
+ETA s.169(4) tests the documents "before filing the return in which the credit is claimed", so the thresholds in force **when the claim is filed** apply, not those on the invoice date. Decision: always use `$100` / `$500`, and emit **CA-TIER-002** (info) for invoices dated before 2021-04-20, explaining that a claim filed before that date used `$30` / `$150`.
 
-### Q3. Tier 2 "status" requirement (s. 3(b)(v))
+### Q2 resolved: combined GST + PST total is a known gap
 
-The regulation asks for "an indication of the status of each taxable supply that is not a zero-rated supply" whenever two or more supplies have different statuses. Strictly, the **taxable, non-zero-rated** lines need to be marked; exempt and zero-rated lines don't. The plan said "tax status where an invoice mixes taxable and exempt/zero-rated items", which is close.
+s.3(b)(iii)(B) allows one combined GST+PST total with a statement that it includes GST. The model can't represent it, so such an invoice gets a **false CA-ITC-011 warning**. Decision: document it as a known gap for v0.1. It is rare on e-invoices (UBL keeps taxes separate); revisit with CSV/PDF input.
 
-**Proposal:** if line statuses differ, flag every taxable, non-zero-rated line that has no explicit status indicator. Don't flag exempt or zero-rated lines.
+### Q3 resolved: CA-ITC-013 triggers only when a line is marked exempt or zero-rated
 
-### Q4. Does the tier threshold include tax?
+s.3(b)(v) applies "where the status of two or more supplies is different" and asks for "an indication of the status of each taxable supply that is not a zero-rated supply". `lines[].taxStatus` records what the document **states**, so an unmarked line's real status is unknown.
 
-The plan says tiers are based on the total **including** tax. The regulation's tier wording is "the total amount paid or payable shown on the supporting documentation". It doesn't say whether tax is included. Within s. 3 the same phrase is used both ways: (b)(iii) covers the case where "the amount paid or payable … does not include the amount of tax", and (b)(iv) covers the case where it does. So the regulation alone doesn't settle the question.
+- If any line is marked exempt or zero-rated, statuses can differ, and an unmarked line may be a taxable supply that needed marking. CA-ITC-013 warns on each unmarked line.
+- If no line is marked exempt or zero-rated (all unmarked, or marked taxable plus unmarked), nothing shows that statuses differ. If they're all taxable nothing is required; if an unmarked one is exempt, only the taxable ones need marking and they already are. No warning.
+- Exempt and zero-rated lines never need marking.
 
-I found no current CRA guidance that settles it. GST/HST Memorandum 8.4 (August 2012) still shows the old `$30` / `$150` thresholds and says nothing about tax in the tier amounts.
+The phase spec's "(or some are unstated)" trigger would have warned on every multi-line invoice with unmarked lines. The maintainer chose the regulation reading.
 
-**Proposal:** keep tax-inclusive, as the plan says. It is also the conservative choice for a linter: tax-inclusive puts borderline invoices into the higher tier, so the tool asks for more information, not less. Record it in the tier rule's metadata as an interpretation, and expose `tierBasis: 'incl-tax' | 'excl-tax'` as an option.
+Open interpretive point: many invoices mark exempt items ("E") and leave taxable items unmarked. Whether that counts as "an indication of the status of each taxable supply" by elimination isn't settled by the text; the rule treats unmarked as not indicated.
+
+### Q4 resolved: tier includes tax
+
+The maintainer confirmed the tier is based on the total **including** tax (the regulation alone doesn't settle it; see the Phase 2 analysis under "Interpretation notes"). No `tierBasis` option.
+
+### CA-ITC-010: either named party's own number
+
+s.3(b)(i) asks for the name of "the supplier or the intermediary" and the registration number of "the supplier or the intermediary, as the case may be". The phase spec required the intermediary's number whenever an intermediary is present. That would flag a compliant invoice showing the supplier's name and number alongside an unnumbered intermediary. Decision (maintainer): pass when any **named** party shows its own number. If no party is named, any number shown passes (CA-ITC-001 already reports the missing name).
+
+### CA-ITC-011 and CA-ITC-012 skip when no supply can carry GST/HST
+
+If every line is marked exempt or zero-rated, no input tax credit is possible, so the tax-disclosure rules don't apply. PST alone doesn't count as GST/HST disclosure.
+
+### CA-ITC-022 also warns when a tier-3 invoice lists no supplies
+
+s.3(c)(iv) needs "a description of each supply". An invoice with no lines describes none, so it gets the warning on `lines`. The generic-word list (info) is a heuristic.
+
+### Severity policy
+
+- **warning**: ITC information missing from this document. Supporting documentation can be spread across documents (s.2), so it is never "illegal".
+- **error**: wrong data: malformed registration number, math that doesn't add up, a rate not in force.
+- **info**: context and skipped checks.
+
+`report.ok` = no errors. A `--strict` CLI flag (Phase 5) will also fail on warnings. Kept from the spec: **CA-MATH-004** (tax on all-exempt/zero-rated lines) is a warning, because either the statuses or the tax could be the wrong part.
+
+### Citations for rules outside SOR/91-45
+
+Math and rate rules cite the Excise Tax Act: s.165(1) (GST at 5% on the value of the consideration), s.165(2) (HST at the participating-province rate), s.165(3) (zero-rated supplies at 0%), s.159 (foreign currency converted to Canadian dollars). CA-MATH-001 and CA-MATH-002 are plain arithmetic and say so ("no statutory provision"). Verified on laws-lois.justice.gc.ca on 2026-11-07.
+
+### Tax math rounding and tolerance
+
+- **CA-MATH-003** recomputes each tax line as `rate × taxableAmount` with exact BigInt math, rounding an exact half-cent **away from zero**, and accepts a difference up to `toleranceCents` (default **1 cent**) per tax line. One cent absorbs both half-up vs banker's rounding and per-line vs per-invoice rounding on typical invoices. No primary source mandating a rounding method was found, so the check is tolerant rather than exact.
+- **CA-MATH-002** allows `toleranceCents × number of tax lines`. With no tax lines the check is exact. When there is no subtotal it uses the sum of the lines.
+- **CA-MATH-001** is exact: adding displayed amounts involves no rounding.
+- Each check that lacks its inputs emits an info explaining what it skipped.
+
+### Rate table source, coverage and a CRA table discrepancy
+
+`rates.ts` is transcribed from the CRA page "GST/HST calculator (and rates)", table "GST/HST rates since April 1, 2013" (retrieved 2026-11-07, page modified 2025-04-01). Only the periods that cover invoices from **2017-01-01** onward are transcribed: 2016-10-01 to 2025-03-31, and 2025-04-01 onward.
+
+The table's **New Brunswick** row shows 13% for July–September 2016, but CRA's [Excise and GST/HST News No. 99](https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/news99/news99-excise-gst-hst-news-no-99.html) says "Effective July 1, 2016, the HST rate in New Brunswick would be 15%". That period is outside coverage, so it was left out rather than copied with a likely error. The CRA table could be used back to 2013-04-01 once that row is corrected.
+
+### Rate checks use the invoice date, against any province
+
+The date for rate checks is `issueDate`, else `taxPaidDate`. Transition rules (e.g. Nova Scotia 2025) tie the rate to when consideration is paid or becomes due, which usually matches the invoice date; an invoice for consideration that became due before a change could legitimately show the old rate. Place of supply isn't determined yet, so an HST rate passes if **any** province had it on that date (`2025-03-15`: 13% or 15%; `2025-04-15`: 13%, 14% or 15%). PST and QST rates aren't checked.
+
+### Pack selection
+
+`ca-gst-hst` is the only pack, so `appliesTo()` returns true for every invoice (a USD invoice still runs it and gets CA-CUR-001). When other packs arrive it should look at currency, supplier province and registration number.
 
 ## Model
 
@@ -87,6 +138,8 @@ Per the Phase 2 spec, a 9-digit BN alone passes the format check, and any progra
 If characters 10–11 are letters, the number is split there. Otherwise it is split at the first two letters after a run of digits. A BN with a missing digit (`75761092RT0001`) therefore reports `length`, instead of a cascade of program and reference errors from shifted characters.
 
 ## Interpretation notes (s. 3 → model)
+
+_Phase 2 notes; the Phase 3 decisions above take precedence._
 
 - **Tier basis.** See Q4. The tool defaults to the total including tax. This is an interpretation, not a verified CRA position.
 - **Supplier or intermediary.** (a)(i) and (b)(i) accept either the supplier's or an intermediary's name and BN. The model will carry an optional `intermediary` party, and the rules pass if either one has the information.

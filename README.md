@@ -50,7 +50,11 @@ Every input format is mapped onto one canonical invoice shape. It's defined with
 
 ## Rules
 
-_TODO (phase 3/5): a rule table with citations to SOR/91-45, s. 3._
+The `ca-gst-hst` pack checks the information a buyer needs to claim GST/HST input tax credits (SOR/91-45 s.3), the registration number, the tax math and the GST/HST rate. **[See every rule with its citation](./docs/rules.md)**: that page is generated from the rule metadata.
+
+- **warning**: information missing from this document (it may be on another document, so never "illegal")
+- **error**: wrong data (malformed number, math that doesn't add up, a rate not in force)
+- **info**: the tier detected, and any check that was skipped
 
 ## Development
 
