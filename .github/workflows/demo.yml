@@ -1,0 +1,32 @@
+name: Demo GIF
+
+# Renders docs/demo.tape to docs/demo.gif with charmbracelet/vhs and uploads it
+# as an artifact. Download it and commit it to update the README demo.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Put invoicelint on PATH
+        run: npm install --global .
+      - uses: charmbracelet/vhs-action@v2
+        with:
+          path: docs/demo.tape
+      - uses: actions/upload-artifact@v7
+        with:
+          name: demo-gif
+          path: docs/demo.gif
+          if-no-files-found: error
