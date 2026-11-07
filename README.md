@@ -24,7 +24,7 @@ _TODO (phase 5): library API, examples and sample output._
 
 ## Invoice model
 
-Every input format is mapped onto one canonical invoice shape. It's defined with [zod](https://zod.dev) in [`src/model.ts`](./src/model.ts) and published as a JSON Schema at [`schema/invoice.schema.json`](./schema/invoice.schema.json) for non-TypeScript users.
+Every input format is mapped onto one canonical invoice shape. It's defined with [zod](https://zod.dev) in [`src/model.ts`](./src/model.ts) and published as a JSON Schema at [`schema/invoice.schema.json`](./schema/invoice.schema.json) for non-TypeScript users. The npm package ships it too, as `invoicelint/schema.json`.
 
 ```json
 {
