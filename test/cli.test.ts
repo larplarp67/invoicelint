@@ -142,6 +142,8 @@ describe('invoicelint CLI', () => {
     expect(await runCli(['check', 'cn.xml'], m.io)).toBe(EXIT.OK);
     expect(m.out()).toContain('PARSE-UBL-010');
     expect(m.out()).toContain('(no rule packs ran)');
+    expect(m.out()).toContain('cn.xml (UBL): NOT CHECKED');
+    expect(m.out()).not.toContain('PASS');
   });
 
   it.each([

@@ -46,7 +46,9 @@ function pretty(results: readonly FileResult[]): string {
     const counts = `${report.errors.length} error(s), ${report.warnings.length} warning(s)`;
     const tier = report.tier === undefined ? '' : ` · tier ${report.tier}`;
     const format = report.format === undefined ? '' : ` (${report.format.toUpperCase()})`;
-    out.push(`${file}${format}: ${report.ok ? 'PASS' : 'FAIL'}${tier} · ${counts}`);
+    // A report that is ok only because nothing ran (e.g. a credit note) is not a pass.
+    const status = !report.ok ? 'FAIL' : report.packs.length === 0 ? 'NOT CHECKED' : 'PASS';
+    out.push(`${file}${format}: ${status}${tier} · ${counts}`);
     for (const issue of [...report.errors, ...report.warnings, ...report.infos]) {
       const field = issue.field === '' ? '' : `  [${issue.field}]`;
       out.push(`  ${LABEL[issue.severity]} ${issue.ruleId}${field}`);
