@@ -26,6 +26,55 @@ Negative totals (credit notes) are tiered like invoices, so a credit note always
 
 The tree is built from fast-xml-parser's ordered output with our own namespace scoping: each element carries its namespace URI and local name, and lookups use `(URI, local name)`. Prefixes (`cbc:`, `cac:`, a default namespace, or anything else) don't matter. An undeclared prefix is a PARSE-UBL-002 error.
 
+### Element paths checked against the Peppol BIS Billing 3.0 tree
+
+Checked on 2026-11-07 against <https://docs.peppol.eu/poacc/billing/3.0/syntax/ubl-invoice/tree/>. Differences from the phase spec:
+
+- **Seller name.** Peppol labels `PartyLegalEntity/RegistrationName` "Seller name" and `PartyName/Name` "Seller trading name". The spec's order (trading name, then legal name) is kept: s.3(a)(i) accepts either "the name of the supplier" or "the name under which the supplier does business".
+- **Buyer name.** `PartyLegalEntity/RegistrationName` ("Buyer name") goes to `buyer.name`, and `PartyName/Name` ("Buyer trading name") to `buyer.tradingName`. CA-ITC-020 accepts either.
+- **`CountrySubentityCode`** is not in the Peppol tree. It exists in generic UBL 2.1 and is read only when `CountrySubentity` is absent.
+- **`PartyTaxScheme` (0..2):** one has `TaxScheme/ID = VAT` (BT-31), the other any other value (BT-32, tax registration identifier). For `gstHstNumber` the parser prefers a scheme naming GST/HST (or TPS/TVH), then a non-VAT scheme, then VAT.
+- **`TaxTotal` (1..2):** the second one, when present, is in the tax currency and has no subtotals. The parser uses the `TaxTotal` whose `TaxAmount@currencyID` equals `DocumentCurrencyCode`, as the spec says.
+
+### "Looks Canadian" gate (maintainer-approved)
+
+The seller "looks Canadian" when `PostalAddress/Country/IdentificationCode` is `CA`, or there is no country and the currency is CAD. Only then is `PartyTaxScheme/CompanyID` mapped to `gstHstNumber`, a province derived, and VAT percentages turned into GST/HST. Otherwise the tax number is left out with a PARSE-UBL-022 info, so a Norwegian VAT number never produces a false CA-BN-001.
+
+### GST/HST from UBL tax subtotals
+
+UBL has no native GST/HST distinction; Peppol always uses `TaxScheme/ID = VAT`. Rules for each `TaxSubtotal`:
+
+1. `TaxScheme/ID` of GST, HST, PST or QST is used as is (so an explicit "GST at 7%" still reaches CA-RATE-001).
+2. Otherwise, for a Canadian seller: 5% → GST; 13%, 14% or 15% → HST.
+3. Anything else → type `OTHER` with a PARSE-UBL-021 info. The amount still counts in the totals.
+4. A subtotal that charges $0 in a category other than `S` (zero-rated, exempt, outside scope, reverse charge) is skipped: it adds nothing and has no GST/HST meaning.
+
+The inference can be wrong: a Canadian invoice with a 13% PST-like charge labelled VAT would become HST. Real Canadian e-invoices should state the scheme explicitly.
+
+### Totals: `TaxInclusiveAmount`, not `PayableAmount`
+
+`total` = `LegalMonetaryTotal/TaxInclusiveAmount` (total including tax). `PayableAmount` is reduced by `PrepaidAmount` and adjusted by `PayableRoundingAmount`, so it is the amount still due, not the "total amount paid or payable" s.3 uses for the tier. `subtotal` = `LineExtensionAmount` (sum of lines), with `AllowanceTotalAmount` / `ChargeTotalAmount` mapped to the new `allowanceTotal` / `chargeTotal`. Run against the 10 official Peppol examples (fetched locally, not committed): no crashes and no false CA-MATH errors, including the ones with allowances and charges.
+
+### Payment terms from `DueDate`
+
+`PaymentTerms/Note` → `paymentTerms`. When there is none but `cbc:DueDate` exists, `paymentTerms` becomes `"Due <date>"`. Whether a due date alone counts as "the terms of payment" (s.3(c)(iii)) is an interpretation; it's treated as enough here because it tells the buyer when payment is owed.
+
+### Lines
+
+- `description` = `Item/Name`, plus `—` and `Item/Description` when that differs.
+- `taxStatus` from `ClassifiedTaxCategory/ID`: S → taxable, Z → zero-rated, E → exempt. Any other UNCL5305 code (AE, K, G, O, L, M, B) leaves it unset with a PARSE-UBL-020 info. No category element at all leaves it unset silently ("not stated").
+- `unitPrice` is left out (PARSE-UBL-022 info) when `PriceAmount` has fractions of a cent (Peppol allows that) or `BaseQuantity` isn't 1. No rule uses the unit price, so dropping it is safer than failing the whole invoice. The same goes for a quantity with more than 6 decimals.
+
+### Required elements and errors
+
+PARSE-UBL-031 covers `cbc:ID`, `cbc:IssueDate`, `cbc:DocumentCurrencyCode` (added: without it every amount would silently be treated as CAD) and `TaxInclusiveAmount`. Only a missing `TaxInclusiveAmount` stops parsing, since there is no total to tier. For the others the invoice is still checked and the error is reported alongside the rule findings. PARSE-UBL-030 (an amount in another currency) is also reported without stopping the parse.
+
+### Not mapped (yet)
+
+- No intermediary: UBL has no direct equivalent of an s.3 intermediary.
+- `cbc:TaxPointDate` isn't mapped to `taxPaidDate`: an invoice always has `IssueDate`, which the rules use first.
+- A Peppol transport envelope (`StandardBusinessDocument`) isn't unwrapped; pass the `Invoice` itself.
+
 ### `XMLValidator` is deprecated in fast-xml-parser 5.x
 
 fast-xml-parser 5.12 marks `XMLValidator` as deprecated in favour of the separate `fast-xml-validator` package (same author, first published May 2026, with its own dependency chain). The built-in validator still ships and works, so it is kept with a targeted lint exception. Revisit when upgrading to fast-xml-parser 6.
