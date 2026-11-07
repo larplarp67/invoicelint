@@ -353,9 +353,16 @@ function mapInvoice(root: XmlElement): UblParseResult {
 
   // --- Taxes -----------------------------------------------------------------
   const taxTotals = children(root, ...cac('TaxTotal'));
+  // Peppol: with a tax currency there are two TaxTotals and only the one in the
+  // document currency has subtotals. Other producers may add a subtotal-less
+  // summary TaxTotal in the same currency, so prefer currency AND subtotals.
+  const inDocCurrency = (t: XmlElement) =>
+    upper(child(t, ...cbc('TaxAmount'))?.attrs.currencyID) === currency;
+  const hasSubtotals = (t: XmlElement) => children(t, ...cac('TaxSubtotal')).length > 0;
   const taxTotal =
-    taxTotals.find((t) => upper(child(t, ...cbc('TaxAmount'))?.attrs.currencyID) === currency) ??
-    taxTotals.find((t) => children(t, ...cac('TaxSubtotal')).length > 0) ??
+    taxTotals.find((t) => inDocCurrency(t) && hasSubtotals(t)) ??
+    taxTotals.find(inDocCurrency) ??
+    taxTotals.find(hasSubtotals) ??
     taxTotals[0];
 
   const taxes: Record<string, string>[] = [];

@@ -296,6 +296,19 @@ describe('taxes', () => {
     expect(invoice.taxes[0]?.amount).toBe(2876);
   });
 
+  it('prefers the doc-currency TaxTotal that has subtotals over a summary-only one', () => {
+    const subtotals = [{ taxable: '221.24', amount: '28.76', category: 'S', percent: '13' }];
+    for (const order of [
+      [{ amount: '28.76' }, { amount: '28.76', subtotals }],
+      [{ amount: '28.76', subtotals }, { amount: '28.76' }],
+    ]) {
+      const { invoice } = ok(parse({ ...caTier2, taxTotals: order }));
+      expect(invoice.taxes).toEqual([
+        { type: 'HST', rate: '13', taxableAmount: 22124, amount: 2876 },
+      ]);
+    }
+  });
+
   it('maps document-level allowance and charge totals', () => {
     const { invoice } = ok(
       parse({ ...caTier2, totals: { ...caTier2.totals, allowance: '10.00', charge: '5.00' } }),
