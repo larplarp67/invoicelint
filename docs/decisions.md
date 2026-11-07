@@ -8,6 +8,10 @@ _None at the moment. Answers to the earlier ones are recorded under "Maintainer 
 
 ## Maintainer answers (2026-11-07)
 
+### LICENSE copyright holder
+
+The MIT LICENSE now reads "Copyright (c) 2026 Bosco <LASTNAME>" (was "invoicelint contributors"). `<LASTNAME>` is a placeholder the maintainer will fill in.
+
 ### Tax date and a transition window around rate changes
 
 **Tax date** = the earlier of `issueDate` and `taxPaidDate` (when present). This follows ETA s.168(1): tax "is payable … on the earlier of the day the consideration for the supply is paid and the day the consideration for the supply becomes due" (checked on laws-lois.justice.gc.ca). The invoice date stands in for "becomes due". Rate checks (CA-RATE-001/002/003) and CA-TIER-002 use this date.
