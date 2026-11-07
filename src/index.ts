@@ -15,7 +15,7 @@ import { parseUblInvoice } from './parsers/ubl.ts';
 import { DEFAULT_MAX_XML_BYTES } from './parsers/xml.ts';
 
 /** Keep in step with package.json; test/smoke.test.ts fails if they differ. */
-export const VERSION = '0.0.0';
+export const VERSION = '0.1.0';
 
 export type InputFormat = 'json' | 'ubl';
 

@@ -1,12 +1,36 @@
 {
   "name": "invoicelint",
-  "version": "0.0.0",
-  "description": "Lint invoices for tax-compliance requirements. Canada first: checks GST/HST input tax credit information and tax math.",
+  "version": "0.1.0",
+  "description": "Check Canadian invoices for the details a buyer needs to claim GST/HST input tax credits, and whether the tax math adds up. JSON and UBL 2.1 (Peppol) input.",
   "license": "MIT",
+  "author": {
+    "name": "Bosco"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/larplarp67/invoicelint.git"
+  },
+  "homepage": "https://github.com/larplarp67/invoicelint#readme",
+  "bugs": {
+    "url": "https://github.com/larplarp67/invoicelint/issues"
+  },
+  "keywords": [
+    "gst",
+    "hst",
+    "canada",
+    "invoice",
+    "validation",
+    "e-invoicing",
+    "ubl",
+    "peppol",
+    "input-tax-credit",
+    "cra",
+    "lint"
+  ],
   "type": "module",
   "sideEffects": false,
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12"
   },
   "packageManager": "pnpm@12.18.0",
   "exports": {
@@ -28,18 +52,6 @@
     "README.md",
     "LICENSE"
   ],
-  "keywords": [
-    "invoice",
-    "e-invoicing",
-    "gst",
-    "hst",
-    "canada",
-    "input-tax-credit",
-    "ubl",
-    "peppol",
-    "lint",
-    "validation"
-  ],
   "scripts": {
     "clean": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
     "schema": "node scripts/generate-schema.ts",
@@ -59,6 +71,7 @@
   "dependencies": {
     "commander": "^15.0.0",
     "fast-xml-parser": "^5.12.0",
+    "picocolors": "^1.1.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
