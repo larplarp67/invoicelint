@@ -1,7 +1,9 @@
 /** Human-readable CLI output. */
 import pc from 'picocolors';
 import { fieldLabel } from '../labels.ts';
+import type { ValidationReport } from '../engine.ts';
 import { type FileResult, type JudgeOptions, fileStatus, summarize } from '../output.ts';
+import { UBL_ISSUES } from '../parsers/ubl.ts';
 import type { Issue } from '../types.ts';
 
 export interface PrettyOptions extends JudgeOptions {
@@ -55,13 +57,24 @@ function renderIssue(issue: Issue, c: Colors, width: number): string[] {
   return out;
 }
 
+/** Why no rules ran on a skipped document, when we know. */
+function skipReason(report: ValidationReport): string | undefined {
+  if (report.infos.some((i) => i.ruleId === UBL_ISSUES.CREDIT_NOTE)) {
+    return 'credit note (not checked yet)';
+  }
+  return undefined;
+}
+
 function headerStatus(result: FileResult, options: PrettyOptions, c: Colors): string {
   const status = fileStatus(result, options);
   if (status === 'input-error') return c.red('✗ input error');
   if (!('report' in result)) return '';
   const { errors, warnings } = result.report;
-  if (status === 'not-checked') return c.dim('– not checked');
-  if (status === 'pass') {
+  if (status === 'skipped') {
+    const reason = skipReason(result.report);
+    return c.dim(reason === undefined ? '⊘ SKIPPED' : `⊘ SKIPPED — ${reason}`);
+  }
+  if (status === 'ok') {
     return warnings.length === 0
       ? c.green('✓ OK')
       : `${c.green('✓ OK')} · ${c.yellow(plural(warnings.length, 'warning'))}`;
@@ -83,8 +96,10 @@ function renderFile(result: FileResult, options: PrettyOptions, c: Colors): stri
   const errors = 'report' in result ? result.report.errors : [result.inputError];
   const warnings = 'report' in result ? result.report.warnings : [];
   const infos = 'report' in result ? result.report.infos : [];
-  // A not-checked file shows its notes even without --verbose, so the reason is visible.
-  const showInfos = options.verbose === true || status === 'not-checked';
+  // A skipped file whose reason the header can't name shows its notes, so the reason is visible.
+  const showInfos =
+    options.verbose === true ||
+    (status === 'skipped' && 'report' in result && skipReason(result.report) === undefined);
   const groups: [string, Issue[]][] = [
     ['Errors', errors],
     ['Warnings', warnings],
@@ -98,16 +113,18 @@ function renderFile(result: FileResult, options: PrettyOptions, c: Colors): stri
   return out;
 }
 
-/** The final line: "3 files · 1 failed · 4 warnings". */
+/** The final line: "3 files · 1 failed · 1 skipped · 4 warnings". */
 export function summaryLine(results: readonly FileResult[], options: PrettyOptions): string {
   const c = pc.createColors(options.color);
   const s = summarize(results, options);
   const parts = [
     plural(s.files, 'file'),
     s.failed > 0 ? c.red(`${s.failed} failed`) : `${s.failed} failed`,
-    s.warnings > 0 ? c.yellow(plural(s.warnings, 'warning')) : plural(s.warnings, 'warning'),
   ];
-  if (s.notChecked > 0) parts.push(`${s.notChecked} not checked`);
+  if (s.skipped > 0) parts.push(`${s.skipped} skipped`);
+  parts.push(
+    s.warnings > 0 ? c.yellow(plural(s.warnings, 'warning')) : plural(s.warnings, 'warning'),
+  );
   if (s.inputErrors > 0) parts.push(c.red(plural(s.inputErrors, 'input error')));
   if (s.strict) parts.push('strict');
   return parts.join(c.dim(' · '));

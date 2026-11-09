@@ -8,10 +8,10 @@ interface JsonOutput {
   tool: { name: 'invoicelint'; version: string };
   summary: {
     files: number;
-    passed: number;
-    failed: number; // errors, or warnings with --strict
-    notChecked: number; // recognized but no rules ran (e.g. a UBL credit note)
-    inputErrors: number; // unreadable, undecodable or unparseable files
+    passed: number; // status "ok"
+    failed: number; // status "failed": errors, or warnings with --strict
+    skipped: number; // status "skipped": recognized but no rules ran (a UBL credit note)
+    inputErrors: number; // status "input-error": unreadable, undecodable or unparseable files
     errors: number;
     warnings: number;
     strict: boolean;
@@ -21,7 +21,7 @@ interface JsonOutput {
 
 interface JsonFileOutput {
   file: string; // as given on the command line, or as a wildcard expanded it
-  status: 'pass' | 'fail' | 'not-checked' | 'input-error';
+  status: 'ok' | 'failed' | 'skipped' | 'input-error'; // see "File status" below
   format?: 'json' | 'ubl'; // absent when the file could not be read
   tier?: number; // 1, 2 or 3; absent when no rules ran
   packs: { id: string; version: string }[]; // rule packs that ran
@@ -42,11 +42,20 @@ interface Issue {
 
 The [README](../README.md#output) has a complete example.
 
+## File status
+
+| `status`      | Pretty output                               | Meaning                                                                                        | Exit code |
+| ------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------- | --------- |
+| `ok`          | `✓ OK` (or `✓ OK · 2 warnings`)             | Rules ran and found no errors (and no warnings, with `--strict`).                              | `0`       |
+| `failed`      | `✗ 1 error, 0 warnings`                     | Errors, or warnings with `--strict`.                                                           | `1`       |
+| `skipped`     | `⊘ SKIPPED — credit note (not checked yet)` | Recognized, but no rules ran: a UBL credit note. Never fails, even with `--strict`. No `tier`. | `0`       |
+| `input-error` | `✗ input error`                             | The file couldn't be read or decoded, or isn't a parseable invoice. The reason is in `errors`. | `2`       |
+
 ## Exit codes
 
 | Code | Meaning                                                                                                                                                         |
 | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0`  | No errors (warnings allowed, unless `--strict`). A file that was recognized but not checked (a credit note) counts as 0.                                        |
+| `0`  | No errors (warnings allowed, unless `--strict`). A skipped file (a credit note) counts as 0, even with `--strict`.                                              |
 | `1`  | At least one file has errors, or warnings with `--strict`.                                                                                                      |
 | `2`  | Usage error (bad option, unknown pack, wildcard matching nothing) or input error (a file is unreadable, undecodable or not a parseable invoice). Wins over `1`. |
 

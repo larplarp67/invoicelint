@@ -14,7 +14,7 @@ The phase spec asked for `node >=20`. commander 15, the CLI's runtime dependency
 
 ### Exit codes and what counts as an input error
 
-`0` ok · `1` issues · `2` usage or input error, with `2` winning over `1` across files. A file is an **input error** when it can't be read (INPUT-001), can't be decoded (INPUT-002), or its parsing failed so no rules ran (any PARSE error that stops parsing, including a JSON document without `total`). Errors reported alongside a parsed invoice (PARSE-UBL-030 currency mismatch, PARSE-UBL-031 for anything but the total) are ordinary errors (`1`), because the invoice was still checked. A credit note (PARSE-UBL-010, info) is "not checked", exit `0`.
+`0` ok · `1` issues · `2` usage or input error, with `2` winning over `1` across files. A file is an **input error** when it can't be read (INPUT-001), can't be decoded (INPUT-002), or its parsing failed so no rules ran (any PARSE error that stops parsing, including a JSON document without `total`). Errors reported alongside a parsed invoice (PARSE-UBL-030 currency mismatch, PARSE-UBL-031 for anything but the total) are ordinary errors (`1`), because the invoice was still checked. A credit note (PARSE-UBL-010, info) is "skipped", exit `0`, even with `--strict` (see [Skipped files](#skipped-files-credit-notes)).
 
 ### Output format follows the terminal
 
@@ -22,13 +22,18 @@ Pretty output when stdout is a TTY, JSON otherwise (`--format` overrides). Colou
 
 ### A stable JSON output shape
 
-`--format json` prints one document: `schemaVersion` (1), `tool`, `summary`, and `files[]` with `status` (`pass` | `fail` | `not-checked` | `input-error`). It is built by `toJsonOutput()` in `src/output.ts`, which is browser-safe and exported, so the playground and a GitHub Action can produce the same document. Documented in [json-output.md](./json-output.md); `schemaVersion` changes only on breaking changes. Infos are always included in JSON; `--verbose` only affects pretty output.
+`--format json` prints one document: `schemaVersion` (1), `tool`, `summary`, and `files[]` with `status` (`ok` | `failed` | `skipped` | `input-error`). It is built by `toJsonOutput()` in `src/output.ts`, which is browser-safe and exported, so the playground and a GitHub Action can produce the same document. Documented in [json-output.md](./json-output.md); `schemaVersion` changes only on breaking changes. Infos are always included in JSON; `--verbose` only affects pretty output.
 
 ### Pretty output details
 
 - Field paths become labels ("taxes[0].rate" → "Tax line 1 rate") via `fieldLabel()`; the raw path stays in JSON.
-- A "not checked" file shows its infos even without `--verbose`, so the reason (e.g. credit note) is visible.
 - Text wraps at the terminal width, capped at 100 columns; 100 when stdout isn't a terminal (`columns` is undefined there, which first produced one word per line).
+
+### Skipped files (credit notes)
+
+Release prep, 2026-11-09. A credit note used to show as "– not checked", and the maintainer asked that a document no rules ran on must never look like a pass. It now shows as `⊘ SKIPPED — credit note (not checked yet)` in a dim, neutral colour (never green), the summary line counts it separately ("3 files · 1 failed · 1 skipped · 4 warnings"), and it gives exit `0`, even with `--strict`: `--strict` makes warnings fail, and a skipped file has none to judge.
+
+The header names the reason, so the PARSE-UBL-010 note is shown only with `--verbose`; a skipped file whose reason the header can't name (none today) still shows its notes. The JSON `status` values were renamed to match the words on screen: `pass` → `ok`, `fail` → `failed`, `not-checked` → `skipped`, and `summary.notChecked` → `summary.skipped`. `input-error` stays a separate status because it has its own exit code (`2`). 0.1.0 wasn't published yet, so `schemaVersion` stays `1`.
 
 ### Public API documentation is tested
 

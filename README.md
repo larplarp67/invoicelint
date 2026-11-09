@@ -37,7 +37,15 @@ invoicelint check invoice.json --verbose            # also show info (tier, skip
 invoicelint rules                                   # list every rule
 ```
 
-Exit codes: `0` ok · `1` issues found · `2` usage or input error. Output is pretty in a terminal and JSON when piped (override with `--format pretty|json`). Set `NO_COLOR=1` to turn colours off.
+Output is pretty in a terminal and JSON when piped (override with `--format pretty|json`). Set `NO_COLOR=1` to turn colours off.
+
+Exit codes:
+
+| Code | Meaning                                                                                                                                                                             |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0`  | No errors. Warnings don't fail a file unless you pass `--strict`. A skipped file (a credit note, recognized but not checked yet: `⊘ SKIPPED`) also gives `0`, even with `--strict`. |
+| `1`  | At least one file has errors, or warnings with `--strict`.                                                                                                                          |
+| `2`  | Usage error, or a file that can't be read, decoded or parsed as an invoice. Wins over `1`.                                                                                          |
 
 As a library (Node or the browser; the core has no file-system access):
 
@@ -91,7 +99,7 @@ The format is detected automatically. Field reference, a UBL example and how UBL
     "files": 1,
     "passed": 0,
     "failed": 1,
-    "notChecked": 0,
+    "skipped": 0,
     "inputErrors": 0,
     "errors": 1,
     "warnings": 0,
@@ -100,7 +108,7 @@ The format is detected automatically. Field reference, a UBL example and how UBL
   "files": [
     {
       "file": "invoice.json",
-      "status": "fail",
+      "status": "failed",
       "format": "json",
       "tier": 2,
       "packs": [{ "id": "ca-gst-hst", "version": "0.1.0" }],
@@ -146,7 +154,7 @@ The reasoning behind every non-obvious choice, with sources: [docs/decisions.md]
 - **No place-of-supply determination.** An HST rate is accepted if any province had it on the tax date.
 - **No QST rules** (Quebec), and PST rates aren't checked; their amounts still count in the totals.
 - **No registry lookups.** A GST/HST number can be well-formed but not registered; only the CRA's GST/HST Registry can confirm that, and it has no public API.
-- **Credit notes are recognized but not checked yet.**
+- **Credit notes are recognized but not checked yet.** They show as `⊘ SKIPPED` (JSON status `skipped`) and never fail a run.
 - Combined GST + PST totals (allowed by s.3(b)(iii)(B)) can't be represented yet and get a false "no GST/HST shown" warning.
 
 ## Roadmap

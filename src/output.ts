@@ -27,12 +27,12 @@ export type FileResult =
 
 /**
  * What happened to one file.
- * - `pass`: rules ran, no errors (and no warnings, when strict)
- * - `fail`: errors (or warnings, when strict)
- * - `not-checked`: recognized but no rules ran (e.g. a UBL credit note)
+ * - `ok`: rules ran, no errors (and no warnings, when strict)
+ * - `failed`: errors (or warnings, when strict)
+ * - `skipped`: recognized but no rules ran (a UBL credit note); never fails, even when strict
  * - `input-error`: unreadable, undecodable, or not a parseable invoice
  */
-export type FileStatus = 'pass' | 'fail' | 'not-checked' | 'input-error';
+export type FileStatus = 'ok' | 'failed' | 'skipped' | 'input-error';
 
 /** Options that change how results are judged. */
 export interface JudgeOptions {
@@ -44,18 +44,19 @@ export interface JudgeOptions {
 export function fileStatus(result: FileResult, options: JudgeOptions = {}): FileStatus {
   if ('inputError' in result) return 'input-error';
   const { report } = result;
-  if (report.packs.length === 0) return report.errors.length > 0 ? 'input-error' : 'not-checked';
-  if (report.errors.length > 0) return 'fail';
-  if (options.strict === true && report.warnings.length > 0) return 'fail';
-  return 'pass';
+  if (report.packs.length === 0) return report.errors.length > 0 ? 'input-error' : 'skipped';
+  if (report.errors.length > 0) return 'failed';
+  if (options.strict === true && report.warnings.length > 0) return 'failed';
+  return 'ok';
 }
 
 /** Totals across all files. */
 export interface Summary {
   files: number;
+  /** Files with status `ok`. */
   passed: number;
   failed: number;
-  notChecked: number;
+  skipped: number;
   inputErrors: number;
   errors: number;
   warnings: number;
@@ -68,7 +69,7 @@ export function summarize(results: readonly FileResult[], options: JudgeOptions 
     files: results.length,
     passed: 0,
     failed: 0,
-    notChecked: 0,
+    skipped: 0,
     inputErrors: 0,
     errors: 0,
     warnings: 0,
@@ -76,9 +77,9 @@ export function summarize(results: readonly FileResult[], options: JudgeOptions 
   };
   for (const result of results) {
     const status = fileStatus(result, options);
-    if (status === 'pass') summary.passed++;
-    else if (status === 'fail') summary.failed++;
-    else if (status === 'not-checked') summary.notChecked++;
+    if (status === 'ok') summary.passed++;
+    else if (status === 'failed') summary.failed++;
+    else if (status === 'skipped') summary.skipped++;
     else summary.inputErrors++;
     if ('report' in result) {
       summary.errors += result.report.errors.length;
@@ -94,7 +95,7 @@ export function summarize(results: readonly FileResult[], options: JudgeOptions 
 export function exitCode(results: readonly FileResult[], options: JudgeOptions = {}): number {
   const statuses = results.map((r) => fileStatus(r, options));
   if (statuses.includes('input-error')) return EXIT_CODES.INPUT;
-  if (statuses.includes('fail')) return EXIT_CODES.ISSUES;
+  if (statuses.includes('failed')) return EXIT_CODES.ISSUES;
   return EXIT_CODES.OK;
 }
 

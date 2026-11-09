@@ -14,6 +14,7 @@ First release.
 - **Inputs**: a canonical JSON model (zod schema, published JSON Schema) and UBL 2.1 / Peppol BIS Billing 3.0 XML, with automatic format detection and file decoding (BOM, UTF-16, declared XML encodings).
 - **XML security**: size limit, DTD/entity declarations refused (XXE, billion laughs), depth limit.
 - **CLI** `invoicelint check` with pretty output (colours, `NO_COLOR`), JSON output (stable, versioned), `--strict`, `--quiet`, `--verbose`, `--pack`, `--format-in`, `--rate-window-days`, wildcard expansion on every OS, and exit codes 0 / 1 / 2. `invoicelint rules` lists the rules.
+- **Per-file `status`** in the JSON output: `ok`, `failed`, `skipped` or `input-error` ([json-output.md](./docs/json-output.md#file-status)). A UBL credit note is recognized but not checked yet: it shows as `⊘ SKIPPED — credit note (not checked yet)`, is counted as skipped in the summary line, and exits 0, even with `--strict`.
 - **Library** `validate()` that runs in Node and in the browser, with TSDoc on every export.
 - Generated rule reference (`docs/rules.md`), design decisions (`docs/decisions.md`), input and output documentation.
 

@@ -4,12 +4,14 @@ import { describe, expect, it } from 'vitest';
 import { type CliIo, EXIT, nodeIo, runCli, useColor } from '../src/cli/app.ts';
 import { detectFormat, validate } from '../src/index.ts';
 import type { JsonOutput } from '../src/output.ts';
+import { renderPretty } from '../src/cli/pretty.ts';
 import { buildUbl, caTier2 } from './helpers/ubl.ts';
 
 // Relative paths keep snapshots identical on every OS (vitest runs from the repo root).
 const PASSING = 'test/fixtures/valid/tier2-on-invoice-250.json';
 const FAILING = 'test/fixtures/invalid/06-registration-number-typo.json';
 const WARNING = 'test/fixtures/invalid/21-bare-business-number.json';
+const CREDIT_NOTE_FILE = 'test/fixtures/eu/fr-credit-note.xml';
 const FIXTURES = join(import.meta.dirname, 'fixtures');
 const CREDIT_NOTE = buildUbl({ ...caTier2, root: 'CreditNote' });
 
@@ -47,6 +49,7 @@ async function run(
 }
 
 const json = (out: string) => JSON.parse(out) as JsonOutput;
+const lastLine = (out: string) => out.trimEnd().split('\n').at(-1);
 
 describe('snapshots (colours off)', () => {
   it('pretty: passing invoice', async () => {
@@ -68,6 +71,16 @@ describe('snapshots (colours off)', () => {
   it('json: failing invoice', async () => {
     expect((await run(['check', '--format', 'json', FAILING])).out).toMatchSnapshot();
   });
+
+  it('pretty: credit note (skipped)', async () => {
+    const r = await run(['check', CREDIT_NOTE_FILE]);
+    expect(r.code).toBe(EXIT.OK);
+    expect(r.out).toMatchSnapshot();
+  });
+
+  it('json: credit note (skipped)', async () => {
+    expect((await run(['check', '--format', 'json', CREDIT_NOTE_FILE])).out).toMatchSnapshot();
+  });
 });
 
 describe('pretty output', () => {
@@ -76,7 +89,7 @@ describe('pretty output', () => {
     expect(r.out).toContain(`${PASSING}  JSON · tier 2 · ✓ OK`);
     expect(r.out).toContain(`${FAILING}  JSON · tier 2 · ✗ 1 error, 0 warnings`);
     expect(r.out).toContain(`${WARNING}  JSON · tier 2 · ✓ OK · 1 warning`);
-    expect(r.out.trimEnd().split('\n').at(-1)).toBe('3 files · 1 failed · 1 warning');
+    expect(lastLine(r.out)).toBe('3 files · 1 failed · 1 warning');
   });
 
   it('groups by severity, with field label, fix and citation', async () => {
@@ -101,14 +114,38 @@ describe('pretty output', () => {
   it('marks --strict failures and says so in the summary', async () => {
     const r = await run(['check', '--strict', WARNING]);
     expect(r.out).toContain('✗ 0 errors, 1 warning (strict)');
-    expect(r.out.trimEnd().split('\n').at(-1)).toBe('1 file · 1 failed · 1 warning · strict');
+    expect(lastLine(r.out)).toBe('1 file · 1 failed · 1 warning · strict');
   });
 
-  it('shows why a document was not checked, even without --verbose', async () => {
+  it('shows a credit note as SKIPPED with the reason, never as OK', async () => {
     const r = await run(['check', 'cn.xml'], { 'cn.xml': CREDIT_NOTE });
-    expect(r.out).toContain('cn.xml  UBL · – not checked');
-    expect(r.out).toContain('PARSE-UBL-010');
-    expect(r.out).toContain('1 not checked');
+    expect(r.out).toContain('cn.xml  UBL · ⊘ SKIPPED — credit note (not checked yet)');
+    expect(r.out).not.toContain('✓');
+    expect(r.out).not.toContain('PARSE-UBL-010'); // the header says why; --verbose shows the note
+    expect(lastLine(r.out)).toBe('1 file · 0 failed · 1 skipped · 0 warnings');
+    const verbose = await run(['check', '--verbose', 'cn.xml'], { 'cn.xml': CREDIT_NOTE });
+    expect(verbose.out).toContain('PARSE-UBL-010');
+  });
+
+  it('shows SKIPPED in a neutral (dim) colour, not green', async () => {
+    const r = await run(['check', 'cn.xml'], { 'cn.xml': CREDIT_NOTE }, { color: true });
+    expect(r.out).toContain('\u001b[2m⊘ SKIPPED — credit note (not checked yet)\u001b[22m');
+    expect(r.out).not.toContain('\u001b[32m');
+  });
+
+  it('counts skipped files separately in the summary line', async () => {
+    const r = await run(['check', WARNING, FAILING, 'cn.xml'], { 'cn.xml': CREDIT_NOTE });
+    expect(lastLine(r.out)).toBe('3 files · 1 failed · 1 skipped · 1 warning');
+  });
+
+  it('shows the notes of a skipped file when the header cannot name the reason', () => {
+    const note = { ruleId: 'X-001', severity: 'info' as const, field: '', message: 'Why.' };
+    const out = renderPretty(
+      [{ file: 'x.xml', report: { ok: true, packs: [], errors: [], warnings: [], infos: [note] } }],
+      { color: false, width: 100 },
+    );
+    expect(out.split('\n')[0]).toBe('x.xml  ⊘ SKIPPED');
+    expect(out).toContain('X-001');
   });
 
   it('shows input errors as such', async () => {
@@ -164,15 +201,15 @@ describe('JSON output shape (documented in docs/json-output.md)', () => {
       files: 3,
       passed: 1,
       failed: 1,
-      notChecked: 0,
+      skipped: 0,
       inputErrors: 1,
       errors: 2,
       warnings: 0,
       strict: false,
     });
     expect(out.files.map((f) => [f.file, f.status, f.format, f.tier])).toEqual([
-      [PASSING, 'pass', 'json', 2],
-      [FAILING, 'fail', 'json', 2],
+      [PASSING, 'ok', 'json', 2],
+      [FAILING, 'failed', 'json', 2],
       ['missing.json', 'input-error', undefined, undefined],
     ]);
     expect(out.files[2]?.errors[0]?.ruleId).toBe('INPUT-001');
@@ -188,6 +225,17 @@ describe('JSON output shape (documented in docs/json-output.md)', () => {
     ]);
   });
 
+  it('reports a credit note as skipped, even with --strict', async () => {
+    for (const args of [['check'], ['check', '--strict']]) {
+      const r = await run([...args, '--format', 'json', 'cn.xml'], { 'cn.xml': CREDIT_NOTE });
+      const out = json(r.out);
+      expect(out.files[0]?.status).toBe('skipped');
+      expect(out.files[0]?.tier).toBeUndefined();
+      expect(out.summary).toMatchObject({ files: 1, passed: 0, failed: 0, skipped: 1 });
+      expect(r.code).toBe(EXIT.OK);
+    }
+  });
+
   it('includes infos regardless of --verbose', async () => {
     const out = json((await run(['check', '--format', 'json', PASSING])).out);
     expect(out.files[0]?.infos.map((i) => i.ruleId)).toContain('CA-TIER-001');
@@ -201,7 +249,19 @@ describe('exit codes', () => {
     ['1: warnings with --strict', ['check', '--strict', WARNING], {}, EXIT.ISSUES],
     ['1: errors', ['check', FAILING], {}, EXIT.ISSUES],
     ['1: errors in one of several files', ['check', PASSING, FAILING], {}, EXIT.ISSUES],
-    ['0: a credit note (not checked)', ['check', 'cn.xml'], { 'cn.xml': CREDIT_NOTE }, EXIT.OK],
+    ['0: a credit note (skipped)', ['check', 'cn.xml'], { 'cn.xml': CREDIT_NOTE }, EXIT.OK],
+    [
+      '0: a credit note (skipped) with --strict',
+      ['check', '--strict', 'cn.xml'],
+      { 'cn.xml': CREDIT_NOTE },
+      EXIT.OK,
+    ],
+    [
+      '1: errors alongside a skipped credit note',
+      ['check', FAILING, 'cn.xml'],
+      { 'cn.xml': CREDIT_NOTE },
+      EXIT.ISSUES,
+    ],
     ['2: missing file', ['check', 'missing.json'], {}, EXIT.USAGE],
     ['2: an input error beats errors', ['check', FAILING, 'missing.json'], {}, EXIT.USAGE],
     ['2: unparseable JSON', ['check', 'bad.json'], { 'bad.json': '{"total": ' }, EXIT.USAGE],
@@ -267,8 +327,8 @@ describe('inputs', () => {
       'latin1.xml': new Uint8Array(Buffer.from(latin1, 'latin1')),
     });
     expect(json(r.out).files.map((f) => [f.format, f.status])).toEqual([
-      ['json', 'pass'],
-      ['ubl', 'pass'],
+      ['json', 'ok'],
+      ['ubl', 'ok'],
     ]);
   });
 

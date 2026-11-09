@@ -1,5 +1,45 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`snapshots (colours off) > json: credit note (skipped) 1`] = `
+"{
+  "schemaVersion": 1,
+  "tool": {
+    "name": "invoicelint",
+    "version": "0.1.0"
+  },
+  "summary": {
+    "files": 1,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 1,
+    "inputErrors": 0,
+    "errors": 0,
+    "warnings": 0,
+    "strict": false
+  },
+  "files": [
+    {
+      "file": "test/fixtures/eu/fr-credit-note.xml",
+      "status": "skipped",
+      "format": "ubl",
+      "packs": [],
+      "errors": [],
+      "warnings": [],
+      "infos": [
+        {
+          "ruleId": "PARSE-UBL-010",
+          "severity": "info",
+          "field": "",
+          "message": "This is a UBL credit note. Credit notes are recognized but not checked yet, so no invoice rules were run.",
+          "fix": "A credit note pack (Credit Note and Debit Note Information (GST/HST) Regulations, SOR/91-44) is on the roadmap."
+        }
+      ]
+    }
+  ]
+}
+"
+`;
+
 exports[`snapshots (colours off) > json: failing invoice 1`] = `
 "{
   "schemaVersion": 1,
@@ -11,7 +51,7 @@ exports[`snapshots (colours off) > json: failing invoice 1`] = `
     "files": 1,
     "passed": 0,
     "failed": 1,
-    "notChecked": 0,
+    "skipped": 0,
     "inputErrors": 0,
     "errors": 1,
     "warnings": 0,
@@ -20,7 +60,7 @@ exports[`snapshots (colours off) > json: failing invoice 1`] = `
   "files": [
     {
       "file": "test/fixtures/invalid/06-registration-number-typo.json",
-      "status": "fail",
+      "status": "failed",
       "format": "json",
       "tier": 2,
       "packs": [
@@ -67,7 +107,7 @@ exports[`snapshots (colours off) > json: passing invoice 1`] = `
     "files": 1,
     "passed": 1,
     "failed": 0,
-    "notChecked": 0,
+    "skipped": 0,
     "inputErrors": 0,
     "errors": 0,
     "warnings": 0,
@@ -76,7 +116,7 @@ exports[`snapshots (colours off) > json: passing invoice 1`] = `
   "files": [
     {
       "file": "test/fixtures/valid/tier2-on-invoice-250.json",
-      "status": "pass",
+      "status": "ok",
       "format": "json",
       "tier": 2,
       "packs": [
@@ -100,6 +140,13 @@ exports[`snapshots (colours off) > json: passing invoice 1`] = `
     }
   ]
 }
+"
+`;
+
+exports[`snapshots (colours off) > pretty: credit note (skipped) 1`] = `
+"test/fixtures/eu/fr-credit-note.xml  UBL · ⊘ SKIPPED — credit note (not checked yet)
+
+1 file · 0 failed · 1 skipped · 0 warnings
 "
 `;
 
