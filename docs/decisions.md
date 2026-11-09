@@ -55,7 +55,7 @@ VHS needs Go, ttyd and ffmpeg, none of which were installed on the maintainer's 
 
 ### LICENSE copyright holder
 
-The MIT LICENSE now reads "Copyright (c) 2026 Bosco <LASTNAME>" (was "invoicelint contributors"). `<LASTNAME>` is a placeholder the maintainer will fill in.
+The MIT LICENSE now reads "Copyright (c) 2026 Bosco <LASTNAME>" (was "invoicelint contributors"). `<LASTNAME>` was a placeholder; at release prep (2026-11-09) it became "Copyright (c) 2026 Bosco Sin", and `package.json` `author` "Bosco Sin".
 
 ### Tax date and a transition window around rate changes
 
