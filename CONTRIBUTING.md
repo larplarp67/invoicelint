@@ -64,19 +64,19 @@ Try the CLI from source with `node dist/cli.js check <file>` after `pnpm build`.
 [release-please](https://github.com/googleapis/release-please) makes the releases, and [`.github/workflows/publish.yml`](./.github/workflows/publish.yml) publishes them to npm with [trusted publishing](https://docs.npmjs.com/trusted-publishers): there's no npm token, and npm adds provenance. Don't bump the version, push tags or run `npm publish` by hand.
 
 1. **Merge PRs with Conventional Commits titles** (squash-merge, so the title is the commit on main). On every push to main, release-please opens or updates a release PR, "chore(main): release X.Y.Z". It holds the next version (`feat` bumps the minor version and `fix` the patch; below 1.0, a breaking change bumps the minor too), the CHANGELOG entry, and the new version in `package.json`, `VERSION` in `src/index.ts` and `.release-please-manifest.json`.
-2. **Merge the release PR** when you want to release. release-please tags vX.Y.Z and creates the GitHub release, then the publish job checks out the tag, builds, tests and runs `npm publish`. Follow it under Actions > Publish.
+2. **Merge the release PR** when you want to release. release-please tags vX.Y.Z and creates the GitHub release, then the publish job checks out the tag, builds, tests and runs `npm publish`. Then the smoke-test job waits (up to 5 minutes) for the new version to show up on npm and runs the [post-release smoke test](#before-a-release-or-demo) against it. If that fails, it opens an issue "Smoke test failed for vX.Y.Z" with the log. Follow it under Actions > Publish.
 
 Good to know:
 
 - **CI doesn't run on the release PR**, because GitHub doesn't start workflows for a PR opened with `GITHUB_TOKEN`. The publish job builds and tests the tag before publishing. To run CI on the release PR anyway, close and reopen it.
 - **Rewording an entry:** edit `CHANGELOG.md` in the release PR just before merging it (release-please rewrites the PR whenever main changes). To change a squash-merged PR's entry for good, add `BEGIN_COMMIT_OVERRIDE`, the corrected title, and `END_COMMIT_OVERRIDE`, each on its own line, to that PR's description.
 - **Not bumped automatically:** the pack's `version` in `src/packs/ca-gst-hst/index.ts` (bump it in a normal PR when the rules change, then run `pnpm docs:rules`) and the version in the README's JSON output example.
-- **Dry run:** Actions > Publish > Run workflow runs the publish job on the chosen branch under a version that isn't on npm, ending in `npm publish --dry-run`, and fails if npm doesn't accept the workflow as the trusted publisher. Nothing is released or published.
+- **Dry run:** Actions > Publish > Run workflow runs the publish job on the chosen branch under a version that isn't on npm, ending in `npm publish --dry-run`, and fails if npm doesn't accept the workflow as the trusted publisher. Then it smoke-tests the current latest version on npm; if that fails, the issue it would open is in the job summary instead. Nothing is released or published, and no issue is opened.
 - **If publishing fails** after the GitHub release was created: for a passing problem (an npm outage), re-run the failed job. For a problem in the code, the tag can't be fixed: merge a `fix:` and release the next patch version. Once a version is on npm, its number can't be published again, even after an unpublish.
 
 ## Before a release or demo
 
-After `npm publish`, run the post-release smoke test. It uses the published package from npm, not your working copy, so it needs network access:
+The post-release smoke test runs the published package from npm, not your working copy, so it needs network access. The publish workflow runs it on Linux after every release (see [Releasing](#releasing)). Run it yourself on Windows before a demo, or to check an earlier version:
 
 ```sh
 corepack pnpm smoke

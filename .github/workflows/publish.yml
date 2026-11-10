@@ -7,6 +7,8 @@ name: Publish
 # conventional commits since the last release. Merging that PR makes it tag the release
 # and create the GitHub release; the publish job then publishes that tag to npm. It has
 # to be in this workflow: a tag created with GITHUB_TOKEN doesn't trigger other workflows.
+# Then the smoke-test job waits for the new version on npm, runs scripts/smoke-test.ps1
+# against it, and opens an issue "Smoke test failed for vX.Y.Z" with the log if it fails.
 #
 # npm trusted publishing (OIDC): no NPM_TOKEN or other secret. npm trusts this repository
 # and this workflow file name (invoicelint > Settings > Trusted publishing on npmjs.com),
@@ -15,7 +17,9 @@ name: Publish
 # Run it by hand (Actions > Publish > Run workflow) for a dry run of the publish job on
 # the chosen branch, under a version that isn't on npm: build, test, and
 # `npm publish --dry-run`, which also checks that npm accepts this workflow as a
-# trusted publisher. release-please doesn't run, and nothing is published.
+# trusted publisher. Then the smoke-test job tests the current latest version on npm and,
+# if that fails, shows the issue it would open in the job summary instead of opening it.
+# release-please doesn't run, and nothing is published.
 on:
   push:
     branches: [main]
@@ -121,3 +125,99 @@ jobs:
             exit 1
           fi
           echo "npm accepted this workflow as the trusted publisher."
+
+  smoke-test:
+    needs: [release-please, publish]
+    # Only after a successful publish (or dry run); !cancelled() as above.
+    if: ${{ !cancelled() && needs.publish.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    env:
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' }}
+      RELEASE_VERSION: ${{ needs.release-please.outputs.version }}
+    steps:
+      # The script and its fixtures as they were in the release.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Version to test
+        id: version
+        run: |
+          if [ "$DRY_RUN" = true ]; then
+            version="$(npm view invoicelint dist-tags.latest --prefer-online)"
+            echo "Dry run: nothing was published, so this tests the current latest version, $version."
+          else
+            version="$RELEASE_VERSION"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      # npm can take a little while to serve a new version everywhere.
+      - name: Wait for invoicelint@${{ steps.version.outputs.version }} on npm
+        id: wait
+        run: |
+          set -o pipefail
+          {
+            deadline=$((SECONDS + 300))
+            until [ "$(npm view "invoicelint@$VERSION" version --prefer-online 2>/dev/null)" = "$VERSION" ]; do
+              if [ "$SECONDS" -ge "$deadline" ]; then
+                echo "invoicelint@$VERSION still isn't on npm after 5 minutes."
+                exit 1
+              fi
+              echo "invoicelint@$VERSION isn't on npm yet; checking again in 15 seconds."
+              sleep 15
+            done
+            echo "invoicelint@$VERSION is on npm."
+          } 2>&1 | tee -a smoke.log
+      - name: Smoke test invoicelint@${{ steps.version.outputs.version }} from npm
+        id: smoke
+        timeout-minutes: 15
+        run: |
+          set -o pipefail
+          pwsh -NoProfile -File scripts/smoke-test.ps1 -Version "$VERSION" 2>&1 | tee -a smoke.log
+      # On a re-run that fails again, this comments on the open issue instead of opening
+      # another one.
+      - name: Open an issue with the log
+        if: ${{ failure() && (steps.wait.outcome == 'failure' || steps.smoke.outcome == 'failure') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Smoke test failed for v$VERSION"
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          limit=60000
+          {
+            echo "The post-publish smoke test failed for [invoicelint $VERSION](https://www.npmjs.com/package/invoicelint/v/$VERSION) in [this run]($run_url) (attempt $GITHUB_RUN_ATTEMPT)."
+            echo
+            echo "It ran \`scripts/smoke-test.ps1 -Version $VERSION\` against the package on npm (see \"Before a release or demo\" in CONTRIBUTING.md). If the release is broken, merge a \`fix:\` to release the next patch. If it was a passing problem, like an npm or network outage, re-run the job and close this issue."
+            echo
+            if [ "$(wc -c < smoke.log)" -gt "$limit" ]; then
+              echo "Log (the last $limit characters; the whole log is in the run):"
+            else
+              echo "Log:"
+            fi
+            echo
+            echo '````text'
+            tail -c "$limit" smoke.log | sed -E 's/\x1b\[[0-9;]*m//g'
+            echo '````'
+          } > issue.md
+          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title $title" \
+            --json number,title --jq "map(select(.title == \"$title\")) | first | .number // empty")"
+          if [ "$DRY_RUN" = true ]; then
+            {
+              echo "### Dry run: the smoke test failed. This issue would have been opened:"
+              echo
+              echo "**$title**${existing:+ (as a comment on the open issue #$existing)}"
+              echo
+              cat issue.md
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "Dry run: not opening \"$title\". The issue text is in the job summary."
+          elif [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body-file issue.md
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body-file issue.md
+          fi
