@@ -46,7 +46,8 @@ function undocumentedExports(): string[] {
 }
 
 describe('public API documentation', () => {
-  it('every export from src/index.ts has its own TSDoc comment', () => {
+  // Building a TypeScript program takes a few seconds, more under coverage on a busy machine.
+  it('every export from src/index.ts has its own TSDoc comment', { timeout: 30_000 }, () => {
     expect(undocumentedExports()).toEqual([]);
   });
 });
