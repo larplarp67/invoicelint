@@ -42,7 +42,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "invoicelint": "./dist/cli.js"
+    "invoicelint": "dist/cli.js"
   },
   "files": [
     "dist",
