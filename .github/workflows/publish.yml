@@ -1,0 +1,49 @@
+name: Publish
+
+# Publishes invoicelint to npm when a version tag (vX.Y.Z) is pushed. It uses npm
+# trusted publishing (OIDC), so there's no NPM_TOKEN or other secret. npm trusts this
+# repository and this workflow file name (set under invoicelint > Settings > Trusted
+# publishing on npmjs.com): renaming the file breaks publishing until that's updated.
+# See "Releasing" in CONTRIBUTING.md.
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - name: Tag matches the package.json version
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match package.json version $version (expected v$version)."
+            exit 1
+          fi
+          echo "Tag $GITHUB_REF_NAME matches package.json version $version."
+      - name: npm 11.5.1 or newer (needed for trusted publishing)
+        run: |
+          current="$(npm --version)"
+          if node -e 'const [a, b, c] = process.argv[1].split(".").map((n) => parseInt(n, 10)); process.exit(a > 11 || (a === 11 && (b > 5 || (b === 5 && c >= 1))) ? 0 : 1)' "$current"; then
+            echo "npm $current is new enough."
+          else
+            echo "npm $current is older than 11.5.1, upgrading."
+            npm install -g npm@latest
+          fi
+          npm --version
+      - run: corepack pnpm install --frozen-lockfile
+      - run: corepack pnpm build
+      - run: corepack pnpm test
+      - run: npm publish

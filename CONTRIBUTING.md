@@ -59,6 +59,26 @@ Try the CLI from source with `node dist/cli.js check <file>` after `pnpm build`.
 - `pnpm check` and `pnpm build` must pass; CI runs them on Node 22 and 24.
 - Update `CHANGELOG.md` under "Unreleased" for user-visible changes.
 
+## Releasing
+
+Releases are published to npm by [`.github/workflows/publish.yml`](./.github/workflows/publish.yml) when a version tag is pushed. It uses npm [trusted publishing](https://docs.npmjs.com/trusted-publishers), so there's no npm token to manage, and npm adds provenance to the package. Don't run `npm publish` by hand.
+
+1. **Bump the version** to X.Y.Z in `package.json` and in `VERSION` in `src/index.ts` (a test fails if they differ), and where the tests, snapshots and README examples show it (`pnpm test -u` updates the snapshots). If the rules changed, also bump the pack's `version` in `src/packs/ca-gst-hst/index.ts` and run `pnpm docs:rules`.
+2. **Update `CHANGELOG.md`:** move the "Unreleased" entries under `## [X.Y.Z] - YYYY-MM-DD`, and update the compare links at the bottom.
+3. **Merge to main** and wait for CI to pass.
+4. **Push the tag** from main:
+
+   ```sh
+   git tag -a vX.Y.Z -m "invoicelint X.Y.Z"
+   git push origin vX.Y.Z
+   ```
+
+5. **The Publish workflow publishes it.** It fails if the tag doesn't match the `package.json` version, then installs, builds, tests and runs `npm publish`. Follow it in the repository's Actions tab.
+
+Then create the GitHub release on the tag from the CHANGELOG section, and run the smoke test below.
+
+If the workflow fails before `npm publish`, nothing was published: fix it on main, delete the tag (`git push origin :refs/tags/vX.Y.Z` and `git tag -d vX.Y.Z`), and do step 4 again. Once a version is on npm, its number can't be published again, even after an unpublish.
+
 ## Before a release or demo
 
 After `npm publish`, run the post-release smoke test. It uses the published package from npm, not your working copy, so it needs network access:
