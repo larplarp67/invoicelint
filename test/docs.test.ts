@@ -8,6 +8,7 @@ import { dirname, join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { type CliIo, nodeIo, runCli } from '../src/cli/app.ts';
 import { validate } from '../src/index.ts';
+import type { JsonOutput } from '../src/output.ts';
 import { caGstHstPack } from '../src/packs/ca-gst-hst/index.ts';
 
 const ROOT = join(import.meta.dirname, '..');
@@ -35,7 +36,12 @@ describe('README', () => {
       exists: (p) => Promise.resolve(p === 'invoice.json'),
     };
     await runCli(['check', '--format', 'json', 'invoice.json'], io);
-    expect(JSON.parse(sample ?? '')).toEqual(JSON.parse(stdout));
+    // Everything but the tool's version, which changes with every release (release-please
+    // can't bump it here: the JSON block has no room for its marker comment).
+    const shown = JSON.parse(sample ?? '') as JsonOutput;
+    const actual = JSON.parse(stdout) as JsonOutput;
+    expect(shown.tool.version).toMatch(/^\d+\.\d+\.\d+$/);
+    expect({ ...shown, tool: { ...shown.tool, version: actual.tool.version } }).toEqual(actual);
   });
 
   it('shows the demo GIF', () => {

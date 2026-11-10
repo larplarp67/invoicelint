@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { type CliIo, EXIT, nodeIo, runCli, useColor } from '../src/cli/app.ts';
-import { detectFormat, validate } from '../src/index.ts';
+import { VERSION, detectFormat, validate } from '../src/index.ts';
 import type { JsonOutput } from '../src/output.ts';
 import { renderPretty } from '../src/cli/pretty.ts';
 import { buildUbl, caTier2 } from './helpers/ubl.ts';
@@ -50,6 +50,9 @@ async function run(
 
 const json = (out: string) => JSON.parse(out) as JsonOutput;
 const lastLine = (out: string) => out.trimEnd().split('\n').at(-1);
+/** The tool's version changes with every release (the pack's doesn't), so snapshots leave it out. */
+const withoutToolVersion = (out: string) =>
+  out.replace(/("tool": \{\s*"name": "invoicelint",\s*"version": )"[^"]*"/, '$1"<version>"');
 
 describe('snapshots (colours off)', () => {
   it('pretty: passing invoice', async () => {
@@ -65,11 +68,13 @@ describe('snapshots (colours off)', () => {
   });
 
   it('json: passing invoice', async () => {
-    expect((await run(['check', '--format', 'json', PASSING])).out).toMatchSnapshot();
+    const r = await run(['check', '--format', 'json', PASSING]);
+    expect(withoutToolVersion(r.out)).toMatchSnapshot();
   });
 
   it('json: failing invoice', async () => {
-    expect((await run(['check', '--format', 'json', FAILING])).out).toMatchSnapshot();
+    const r = await run(['check', '--format', 'json', FAILING]);
+    expect(withoutToolVersion(r.out)).toMatchSnapshot();
   });
 
   it('pretty: credit note (skipped)', async () => {
@@ -79,7 +84,8 @@ describe('snapshots (colours off)', () => {
   });
 
   it('json: credit note (skipped)', async () => {
-    expect((await run(['check', '--format', 'json', CREDIT_NOTE_FILE])).out).toMatchSnapshot();
+    const r = await run(['check', '--format', 'json', CREDIT_NOTE_FILE]);
+    expect(withoutToolVersion(r.out)).toMatchSnapshot();
   });
 });
 
@@ -196,7 +202,7 @@ describe('JSON output shape (documented in docs/json-output.md)', () => {
       (await run(['check', '--format', 'json', PASSING, FAILING, 'missing.json'])).out,
     );
     expect(out.schemaVersion).toBe(1);
-    expect(out.tool).toEqual({ name: 'invoicelint', version: '0.2.0' });
+    expect(out.tool).toEqual({ name: 'invoicelint', version: VERSION });
     expect(out.summary).toEqual({
       files: 3,
       passed: 1,
@@ -379,7 +385,7 @@ describe('other commands', () => {
   });
 
   it('--version prints the package version', async () => {
-    expect((await run(['--version'])).out.trim()).toBe('0.2.0');
+    expect((await run(['--version'])).out.trim()).toBe(VERSION);
   });
 });
 
