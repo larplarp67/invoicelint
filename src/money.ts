@@ -11,8 +11,8 @@ export type Cents = number;
 /** How to round a result that falls exactly halfway between two cents. */
 export type Rounding = 'half-away-from-zero' | 'half-even';
 
-/** A parse that either succeeded with a value or failed with a reason. */
-export type ParseResult<T> = { ok: true; value: T } | { ok: false; reason: string };
+/** A parse that either succeeded with a value or failed with a reason (and, when there is one, a fix hint). */
+export type ParseResult<T> = { ok: true; value: T } | { ok: false; reason: string; fix?: string };
 
 // Optional sign, optional "$", digits with optional comma grouping, optional fraction.
 const MONEY_RE = /^(-)?\$?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?$/;
@@ -23,13 +23,21 @@ const MAX_SAFE = BigInt(Number.MAX_SAFE_INTEGER);
 
 function toText(input: string | number): ParseResult<string> {
   if (typeof input === 'number') {
-    if (!Number.isFinite(input)) return { ok: false, reason: `${String(input)} is not a number` };
+    if (!Number.isFinite(input)) {
+      return { ok: false, reason: `${String(input)} is not a number`, fix: 'Use a finite number.' };
+    }
     // String() gives the shortest round-trip form, e.g. 1234.56 -> "1234.56".
     // Very large/small values come out in exponent form and are rejected below.
     return { ok: true, value: String(input) };
   }
   const text = input.trim();
-  if (text === '') return { ok: false, reason: 'is empty' };
+  if (text === '') {
+    return {
+      ok: false,
+      reason: 'is empty',
+      fix: "Fill in the value, or leave the field out if the invoice doesn't show it.",
+    };
+  }
   return { ok: true, value: text };
 }
 
@@ -51,6 +59,7 @@ export function parseMoney(input: string | number): ParseResult<Cents> {
     return {
       ok: false,
       reason: `"${text.value}" is not a valid amount (expected e.g. 1234.56 or "1,234.56")`,
+      fix: 'Write the amount as a number like 1234.56 or a string like "1,234.56". A leading "$" or minus sign is fine; spaces, decimal commas and other currency symbols are not.',
     };
   }
   const [, sign, intPart = '', frac = ''] = m;
@@ -58,11 +67,18 @@ export function parseMoney(input: string | number): ParseResult<Cents> {
     return {
       ok: false,
       reason: `"${text.value}" has more than 2 decimal places; amounts must be exact cents`,
+      fix: 'Give the amount in dollars and cents as shown on the invoice, with at most 2 decimal places (e.g. "12.35", not "12.345"). invoicelint does not round amounts.',
     };
   }
   const cents =
     BigInt(intPart.replaceAll(',', '')) * 100n + BigInt(frac.slice(0, 2).padEnd(2, '0'));
-  if (cents > MAX_SAFE) return { ok: false, reason: `"${text.value}" is too large` };
+  if (cents > MAX_SAFE) {
+    return {
+      ok: false,
+      reason: `"${text.value}" is too large`,
+      fix: 'Check the amount: it is too large to be handled exactly.',
+    };
+  }
   const value = Number(cents);
   return { ok: true, value: sign && value !== 0 ? -value : value };
 }
@@ -92,13 +108,20 @@ export function parseDecimal(
   const text = toText(input);
   if (!text.ok) return text;
   const m = DECIMAL_RE.exec(text.value);
-  if (!m) return { ok: false, reason: `"${text.value}" is not a plain decimal number` };
+  if (!m) {
+    return {
+      ok: false,
+      reason: `"${text.value}" is not a plain decimal number`,
+      fix: 'Write it as a plain number, e.g. 13 or "9.975", without "%", spaces or commas.',
+    };
+  }
   const [, sign, intPart = '', rawFrac = ''] = m;
   const frac = rawFrac.replace(/0+$/, '');
   if (opts.maxScale !== undefined && frac.length > opts.maxScale) {
     return {
       ok: false,
       reason: `"${text.value}" has more than ${opts.maxScale} decimal places`,
+      fix: `Use at most ${opts.maxScale} decimal places.`,
     };
   }
   const whole = intPart.replace(/^0+(?=\d)/, '');
@@ -106,10 +129,18 @@ export function parseDecimal(
   const normalized = `${sign && !isZero ? '-' : ''}${whole}${frac ? `.${frac}` : ''}`;
   const numeric = Number(normalized);
   if (opts.min !== undefined && numeric < opts.min) {
-    return { ok: false, reason: `${normalized} is below the minimum of ${opts.min}` };
+    return {
+      ok: false,
+      reason: `${normalized} is below the minimum of ${opts.min}`,
+      fix: `Use a value of at least ${opts.min}.`,
+    };
   }
   if (opts.max !== undefined && numeric > opts.max) {
-    return { ok: false, reason: `${normalized} is above the maximum of ${opts.max}` };
+    return {
+      ok: false,
+      reason: `${normalized} is above the maximum of ${opts.max}`,
+      fix: `Use a value of at most ${opts.max}.`,
+    };
   }
   return { ok: true, value: normalized };
 }

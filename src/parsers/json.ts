@@ -50,6 +50,39 @@ function describeExpected(expected: string): string {
   return expected === 'object' ? 'an object' : expected === 'array' ? 'an array' : `a ${expected}`;
 }
 
+/** How to fix a value of the wrong JSON type, by the type expected. */
+function wrongTypeFix(expected: string): string {
+  switch (expected) {
+    case 'string':
+      return "Write the value as text in double quotes, or leave the field out if the invoice doesn't show it.";
+    case 'object':
+      return 'Write it as an object: { ... }.';
+    case 'array':
+      return 'Write it as a list: [ ... ], even when there is only one item.';
+    default:
+      return `Change it to ${describeExpected(expected)}.`;
+  }
+}
+
+/**
+ * Fix hints for fields whose allowed values or format are worth spelling out.
+ * Array indexes are written "[]", so "lines[2].taxStatus" uses "lines[].taxStatus".
+ */
+const FIELD_FIXES: Record<string, string> = {
+  currency: 'Use the 3-letter currency code in capitals, e.g. "CAD" or "USD".',
+  'supplier.province':
+    'Use the two-letter province or territory code in capitals, e.g. "ON" for Ontario or "QC" for Quebec.',
+  'lines[].taxStatus':
+    'Use "taxable", "zero-rated" or "exempt", or leave taxStatus out if the invoice doesn\'t say.',
+  'taxes[].type':
+    'Use "GST", "HST", "PST" or "QST", or "OTHER" for any other tax (for example foreign VAT).',
+  'taxIncludedStatement.included':
+    "Set it to true, or leave taxIncludedStatement out if the invoice doesn't say tax is included.",
+};
+
+const fieldFix = (field: string): string | undefined =>
+  FIELD_FIXES[field.replace(/\[\d+\]/g, '[]')];
+
 function toIssue(zi: z.core.$ZodIssue): Issue {
   const field = formatPath(zi.path);
   const input: unknown = zi.input;
@@ -65,6 +98,7 @@ function toIssue(zi: z.core.$ZodIssue): Issue {
         PARSE.WRONG_TYPE,
         field,
         `${name} must be ${describeExpected(zi.expected)}, but got ${jsonTypeOf(input)}.`,
+        wrongTypeFix(zi.expected),
       );
     case 'invalid_union':
       // Our only unions are "number or decimal string" (money, rates, quantities).
@@ -81,6 +115,8 @@ function toIssue(zi: z.core.$ZodIssue): Issue {
         `${name} is ${JSON.stringify(input)}, but must be one of: ${zi.values
           .map((v) => JSON.stringify(v))
           .join(', ')}.`,
+        fieldFix(field) ??
+          'Use one of the values listed, spelled exactly as shown (capitals matter).',
       );
     case 'invalid_format':
       if (zi.format === 'date') {
@@ -91,10 +127,23 @@ function toIssue(zi: z.core.$ZodIssue): Issue {
           'Use the YYYY-MM-DD format, e.g. "2026-03-15".',
         );
       }
-      return issue(PARSE.INVALID_VALUE, field, `${name} ${zi.message}.`);
-    default:
-      // custom (money/decimal reasons) and anything else zod may add.
-      return issue(PARSE.INVALID_VALUE, field, `${name}: ${zi.message}.`);
+      return issue(
+        PARSE.INVALID_VALUE,
+        field,
+        `${name} ${zi.message}.`,
+        fieldFix(field) ?? 'Change the value to the format described.',
+      );
+    default: {
+      // custom (money/decimal reasons, with a fix hint when the parser gave
+      // one) and anything else zod may add.
+      const fix: unknown = zi.code === 'custom' ? zi.params?.fix : undefined;
+      return issue(
+        PARSE.INVALID_VALUE,
+        field,
+        `${name}: ${zi.message}.`,
+        typeof fix === 'string' ? fix : undefined,
+      );
+    }
   }
 }
 

@@ -17,6 +17,25 @@ import { parseDecimal, parseMoney } from './money.ts';
 // Primitives
 // ---------------------------------------------------------------------------
 
+/**
+ * Report a failed money/decimal parse as a zod issue. The fix hint travels in
+ * `params.fix`, which the JSON parser turns into the issue's Fix (PARSE-005).
+ */
+function addParseIssue(
+  ctx: z.RefinementCtx,
+  value: unknown,
+  failure: { reason: string; fix?: string },
+  hint?: string,
+): void {
+  const fix = [failure.fix, hint].filter((s) => s !== undefined).join(' ');
+  ctx.addIssue({
+    code: 'custom',
+    message: failure.reason,
+    input: value,
+    ...(fix === '' ? {} : { params: { fix } }),
+  });
+}
+
 /** Money: number or decimal string in input, integer cents in output. */
 const money = (description: string) =>
   z
@@ -24,7 +43,7 @@ const money = (description: string) =>
     .transform((value, ctx) => {
       const result = parseMoney(value);
       if (!result.ok) {
-        ctx.addIssue({ code: 'custom', message: result.reason, input: value });
+        addParseIssue(ctx, value, result);
         return z.NEVER;
       }
       return result.value;
@@ -34,13 +53,18 @@ const money = (description: string) =>
     });
 
 /** Exact decimal: number or decimal string in input, normalized decimal string in output. */
-const decimal = (description: string, opts: Parameters<typeof parseDecimal>[1]) =>
+const decimal = (
+  description: string,
+  opts: Parameters<typeof parseDecimal>[1],
+  /** Added to the fix hint when the value is rejected. */
+  hint?: string,
+) =>
   z
     .union([z.string(), z.number()])
     .transform((value, ctx) => {
       const result = parseDecimal(value, opts);
       if (!result.ok) {
-        ctx.addIssue({ code: 'custom', message: result.reason, input: value });
+        addParseIssue(ctx, value, result, hint);
         return z.NEVER;
       }
       return result.value;
@@ -49,11 +73,11 @@ const decimal = (description: string, opts: Parameters<typeof parseDecimal>[1]) 
 
 /** Tax rate in percent: 13 means 13%, "9.975" means 9.975%. */
 const ratePercent = (description: string) =>
-  decimal(`${description} In percent: 13 means 13%. Up to 4 decimal places.`, {
-    maxScale: 4,
-    min: 0,
-    max: 100,
-  });
+  decimal(
+    `${description} In percent: 13 means 13%. Up to 4 decimal places.`,
+    { maxScale: 4, min: 0, max: 100 },
+    'Rates are in percent: 13 means 13%.',
+  );
 
 /** Free text; whitespace-only counts as missing. */
 const text = (description: string) =>

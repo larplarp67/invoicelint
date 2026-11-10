@@ -141,6 +141,8 @@ function buildElement(node: RawNode, scope: ReadonlyMap<string, string>): XmlEle
   return { ns: ns ?? '', local, attrs, children, text: collectText(childNodes) };
 }
 
+const NOT_WELL_FORMED_FIX = 'Check the file was exported completely and is valid XML.';
+
 /** Parse XML into a namespace-aware element tree, or explain why not. */
 export function parseXml(input: string, options: XmlOptions = {}): XmlParseResult {
   const maxBytes = options.maxBytes ?? DEFAULT_MAX_XML_BYTES;
@@ -172,10 +174,16 @@ export function parseXml(input: string, options: XmlOptions = {}): XmlParseResul
   const valid = XMLValidator.validate(xml, { allowBooleanAttributes: false });
   if (valid !== true) {
     const { msg, line, col } = valid.err;
+    // The validator leaves out the position it doesn't know (e.g. the column
+    // for a file that is only an XML declaration).
+    const position = [
+      ...(typeof line === 'number' ? [`line ${line}`] : []),
+      ...(typeof col === 'number' ? [`column ${col}`] : []),
+    ].join(', ');
     return fail(
       XML_ISSUES.MALFORMED,
-      `The file is not well-formed XML (line ${line}, column ${col}): ${msg}`,
-      'Check the file was exported completely and is valid XML.',
+      `The file is not well-formed XML${position === '' ? '' : ` (${position})`}: ${msg}`,
+      NOT_WELL_FORMED_FIX,
     );
   }
 
@@ -196,10 +204,15 @@ export function parseXml(input: string, options: XmlOptions = {}): XmlParseResul
       maxNestedTags: maxDepth,
     }).parse(xml);
   } catch (err) {
-    return fail(
-      XML_ISSUES.MALFORMED,
-      `The XML could not be read: ${err instanceof Error ? err.message : String(err)}.`,
-    );
+    const detail = err instanceof Error ? err.message : String(err);
+    if (/nested tags/i.test(detail)) {
+      return fail(
+        XML_ISSUES.MALFORMED,
+        `The XML is nested more than ${maxDepth} elements deep, which is far deeper than any UBL invoice.`,
+        'Check this is a UBL invoice and that it was exported correctly.',
+      );
+    }
+    return fail(XML_ISSUES.MALFORMED, `The XML could not be read: ${detail}.`, NOT_WELL_FORMED_FIX);
   }
 
   const top = Array.isArray(parsed) ? (parsed as unknown[]).filter(isRecord) : [];
@@ -208,11 +221,13 @@ export function parseXml(input: string, options: XmlOptions = {}): XmlParseResul
   );
   const rootNode = rootNodes[0];
   if (rootNode === undefined) {
-    return fail(XML_ISSUES.MALFORMED, 'The XML has no root element.');
+    return fail(XML_ISSUES.MALFORMED, 'The XML has no root element.', NOT_WELL_FORMED_FIX);
   }
   try {
     const root = buildElement(rootNode, new Map([['xml', XML_NS]]));
-    if (!root) return fail(XML_ISSUES.MALFORMED, 'The XML has no root element.');
+    if (!root) {
+      return fail(XML_ISSUES.MALFORMED, 'The XML has no root element.', NOT_WELL_FORMED_FIX);
+    }
     return { ok: true, root };
   } catch (err) {
     if (err instanceof UnboundPrefixError) {

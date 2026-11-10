@@ -138,10 +138,48 @@ describe('parseJsonInvoice', () => {
     );
     expect(byField.issueDate?.fix).toMatch(/YYYY-MM-DD/);
     expect(byField['lines[1].lineTotal']?.message).toMatch(/more than 2 decimal places/);
+    expect(byField['lines[1].lineTotal']?.fix).toBe(
+      'Give the amount in dollars and cents as shown on the invoice, with at most 2 decimal places (e.g. "12.35", not "12.345"). invoicelint does not round amounts.',
+    );
+    expect(byField['taxes[0].rate']?.fix).toBe(
+      'Use a value of at most 100. Rates are in percent: 13 means 13%.',
+    );
+    expect(byField['supplier.province']?.fix).toMatch(/"ON" for Ontario/);
+    expect(byField['lines[2].taxStatus']?.fix).toMatch(/leave taxStatus out/);
     expect(byField['lines[2].taxStatus']?.message).toBe(
       '"lines[2].taxStatus" is "taxed", but must be one of: "taxable", "zero-rated", "exempt".',
     );
     expect(byField['taxes[0].rate']?.message).toMatch(/above the maximum of 100/);
+  });
+
+  // One bad input per way parsing can fail. Every error must say how to fix it.
+  it.each([
+    ['not JSON', '{"total": '],
+    ['not an object', '[1, 2]'],
+    ['missing total', {}],
+    ['total of the wrong type', { total: true }],
+    ['amount that is not a number', { total: 'abc' }],
+    ['empty amount', { total: '  ' }],
+    ['amount with 3 decimals', { total: '12.345' }],
+    ['amount too large', { total: '99999999999999999.00' }],
+    ['impossible date', { total: 1, issueDate: '2026-02-30' }],
+    ['lowercase currency', { total: 1, currency: 'cad' }],
+    ['unknown province', { total: 1, supplier: { province: 'QB' } }],
+    ['name that is a number', { total: 1, supplier: { name: 5 } }],
+    ['supplier that is a string', { total: 1, supplier: 'Acme' }],
+    ['lines that are not a list', { total: 1, lines: { lineTotal: '1.00' } }],
+    ['unknown tax status', { total: 1, lines: [{ lineTotal: 1, taxStatus: 'taxed' }] }],
+    ['quantity with 7 decimals', { total: 1, lines: [{ lineTotal: 1, quantity: '1.1234567' }] }],
+    ['unknown tax type', { total: 1, taxes: [{ type: 'VAT', amount: 1 }] }],
+    ['rate written with %', { total: 1, taxes: [{ type: 'HST', rate: '13%', amount: 1 }] }],
+    ['negative rate', { total: 1, taxes: [{ type: 'HST', rate: -1, amount: 1 }] }],
+    ['rate over 100', { total: 1, taxes: [{ type: 'HST', rate: 105, amount: 1 }] }],
+    ['rate with 5 decimals', { total: 1, taxes: [{ type: 'QST', rate: '9.97512', amount: 1 }] }],
+    ['included: false', { total: 1, taxIncludedStatement: { included: false } }],
+  ] as const)('%s: every parse error has a Fix hint', (_label, input) => {
+    const result = parseJsonInvoice(input);
+    expect(errors(result).length).toBeGreaterThan(0);
+    for (const issue of errors(result)) expect(issue.fix, issue.message).toBeTruthy();
   });
 
   it('reports every problem, not just the first', () => {

@@ -126,6 +126,13 @@ describe('security', () => {
     const deep = '<a>'.repeat(150) + '</a>'.repeat(150);
     expect(issueIds(deep)).toEqual(['PARSE-UBL-002']);
     expect(issueIds(deep, { maxDepth: 200 })).toEqual([]);
+    const r = parseXml(deep);
+    if (r.ok) throw new Error('expected a failure');
+    expect(r.issues[0]).toMatchObject({
+      message:
+        'The XML is nested more than 100 elements deep, which is far deeper than any UBL invoice.',
+      fix: 'Check this is a UBL invoice and that it was exported correctly.',
+    });
   });
 });
 
@@ -136,6 +143,18 @@ describe('malformed input', () => {
       const r = parseXml(xml);
       expect(r.ok).toBe(false);
       if (!r.ok) expect(r.issues[0]?.ruleId).toBe('PARSE-UBL-002');
+    },
+  );
+
+  it.each(['', '<?xml version="1.0"?>', '<a><b></a>', '<a></a><b></b>', '<x:a/>'])(
+    '%j: every message names a real position and has a Fix hint',
+    (xml) => {
+      const r = parseXml(xml);
+      if (r.ok) throw new Error('expected a failure');
+      for (const issue of r.issues) {
+        expect(issue.message).not.toMatch(/undefined/);
+        expect(issue.fix, issue.message).toBeTruthy();
+      }
     },
   );
 });
