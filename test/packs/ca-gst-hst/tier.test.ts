@@ -97,3 +97,76 @@ describe('amounts in messages use the invoice currency', () => {
     );
   });
 });
+
+describe('CA-TOTAL-001 negative total (refund or credit note)', () => {
+  const refund = {
+    ...tier2,
+    invoiceNumber: 'R1',
+    lines: [
+      { description: 'Refund: printing', lineTotal: '-221.24', taxStatus: 'taxable' as const },
+    ],
+    subtotal: '-221.24',
+    taxes: [{ type: 'HST' as const, rate: 13, taxableAmount: '-221.24', amount: '-28.76' }],
+    total: '-250.00',
+  };
+
+  it('notes the negative total, and the report has no tier', () => {
+    const report = check(refund);
+    expect(report.tier).toBeUndefined();
+    expect(report.ok).toBe(true);
+    expect(findings(report)).toEqual([]);
+    expect(report.infos.map((i) => i.ruleId)).toEqual(['CA-TOTAL-001']);
+    expect(byRule(report, 'CA-TOTAL-001')[0]).toMatchObject({
+      severity: 'info',
+      field: 'total',
+      citation: 'ETA s.232(3); SOR/91-44',
+    });
+    expect(byRule(report, 'CA-TOTAL-001')[0]?.message).toMatch(
+      /^The total is -\$250\.00\. A negative total looks like a refund or credit note/,
+    );
+  });
+
+  it('skips every tier rule: nothing is required of a refund by tier', () => {
+    // Positive, this would be tier 3 with no supplier name, date, GST/HST number,
+    // buyer or terms, before the 2021 threshold change.
+    const bare = check({
+      total: '-600.00',
+      lines: [{ description: 'x', lineTotal: '-600.00' }],
+      subtotal: '-600.00',
+      supplier: { gstHstNumber: '812345676' },
+    });
+    expect(findings(bare)).toEqual([]);
+    expect(bare.infos.map((i) => i.ruleId)).toEqual(['CA-TOTAL-001']);
+    expect(findings(check({ ...refund, issueDate: '2020-01-01' }))).toEqual([]);
+    expect(byRule(check({ ...refund, issueDate: '2020-01-01' }), 'CA-TIER-002')).toEqual([]);
+  });
+
+  it('still checks the math, the rate and the GST/HST number', () => {
+    expect(findings(check({ ...refund, total: '-251.00' }))).toEqual(['CA-MATH-002']);
+    expect(
+      findings(
+        check({
+          ...refund,
+          taxes: [{ type: 'GST', rate: 7, taxableAmount: '-221.24', amount: '-15.49' }],
+          total: '-236.73',
+        }),
+      ),
+    ).toEqual(['CA-RATE-001']);
+    const typo = { ...refund, supplier: { ...refund.supplier, gstHstNumber: '812345677RT0001' } };
+    expect(findings(check(typo))).toEqual(['CA-BN-001']);
+  });
+
+  it('still warns about a foreign currency, without the tier wording', () => {
+    const [issue] = byRule(check({ ...refund, currency: 'USD' }), 'CA-CUR-001');
+    expect(issue?.message).toBe(
+      'This document is in USD. For GST/HST, amounts in another currency are converted to Canadian dollars.',
+    );
+    expect(issue?.fix).not.toMatch(/tier/);
+  });
+
+  it('a zero total is still an invoice (tier 1)', () => {
+    const report = check({ total: '0.00' });
+    expect(report.tier).toBe(1);
+    expect(byRule(report, 'CA-TOTAL-001')).toEqual([]);
+  });
+});

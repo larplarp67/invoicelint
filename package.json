@@ -1,6 +1,6 @@
 {
   "name": "invoicelint",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Check Canadian invoices for the details a buyer needs to claim GST/HST input tax credits, and whether the tax math adds up. JSON and UBL 2.1 (Peppol) input.",
   "license": "MIT",
   "author": "Bosco Sin",

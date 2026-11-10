@@ -23,7 +23,7 @@ interface JsonFileOutput {
   file: string; // as given on the command line, or as a wildcard expanded it
   status: 'ok' | 'failed' | 'skipped' | 'input-error'; // see "File status" below
   format?: 'json' | 'ubl'; // absent when the file could not be read
-  tier?: number; // 1, 2 or 3; absent when no rules ran
+  tier?: number; // 1, 2 or 3; absent when no rules ran, and for a negative total (CA-TOTAL-001)
   packs: { id: string; version: string }[]; // rule packs that ran
   errors: Issue[];
   warnings: Issue[];

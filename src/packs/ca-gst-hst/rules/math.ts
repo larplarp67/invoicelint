@@ -7,7 +7,13 @@
  * instead of guessing.
  */
 import { defineRule } from '../../types.ts';
-import { type CaContext, allLinesStatedNonTaxable, isGstHst, taxLabel } from '../context.ts';
+import {
+  type CaContext,
+  allLinesStatedNonTaxable,
+  isGstHst,
+  isStatedNonTaxable,
+  taxLabel,
+} from '../context.ts';
 
 const ARITHMETIC = 'Arithmetic check (not a legal requirement)';
 
@@ -143,4 +149,64 @@ export const taxOnNonTaxableSupplies = defineRule<CaContext>(
   },
 );
 
-export const mathRules = [linesAddUp, totalAddsUp, taxAmountMatchesRate, taxOnNonTaxableSupplies];
+/** "a", "a and b", "a, b, and c" */
+const joinList = (items: readonly string[]): string =>
+  items.length <= 2
+    ? items.join(' and ')
+    : `${items.slice(0, -1).join(', ')}, and ${items.at(-1) ?? ''}`;
+
+/** True when `amount` is further from zero than `bound` in its own direction (refunds are negative). */
+const exceeds = (amount: number, bound: number): boolean =>
+  amount < 0 && bound <= 0 ? amount < bound : amount > bound;
+
+export const taxOnNonTaxableLines = defineRule<CaContext>(
+  {
+    id: 'CA-MATH-005',
+    severity: 'warning',
+    title: 'GST/HST charged on more than the lines not marked exempt or zero-rated',
+    citation: 'ETA s.165(1), (2), (3)',
+    fix: 'Ask the supplier which is right: the amount GST/HST was charged on, or the exempt and zero-rated line statuses.',
+  },
+  ({ invoice, money }, report) => {
+    const { lines } = invoice;
+    // Only a line marked exempt or zero-rated can be taxed by mistake. When
+    // every line is, CA-MATH-004 reports it instead.
+    if (!lines.some(isStatedNonTaxable) || allLinesStatedNonTaxable(invoice)) return;
+
+    // The most GST/HST can be charged on: every line not marked exempt or
+    // zero-rated (unmarked lines may be taxable; CA-ITC-013 asks for the
+    // marking), plus document-level charges. Allowances are left out so this
+    // stays an upper bound. Exact, like CA-MATH-001: no rounding is involved.
+    const lineSum = sum(lines.filter((l) => !isStatedNonTaxable(l)).map((l) => l.lineTotal));
+    const charges = invoice.chargeTotal ?? 0;
+    const bound = lineSum + charges;
+    const marked = lines.flatMap((l, i) =>
+      isStatedNonTaxable(l)
+        ? [
+            `line ${i + 1}${l.description === undefined ? '' : ` ("${l.description}")`} is marked ${l.taxStatus ?? ''}`,
+          ]
+        : [],
+    );
+    const boundText =
+      invoice.chargeTotal === undefined
+        ? `the lines not marked exempt or zero-rated add up to ${money.amount(bound)}`
+        : `the lines not marked exempt or zero-rated (${money.amount(lineSum)}) plus charges (${money.amount(charges)}) come to ${money.amount(bound)}`;
+
+    invoice.taxes.forEach((tax, i) => {
+      if (!isGstHst(tax) || tax.taxableAmount === undefined) return;
+      if (!exceeds(tax.taxableAmount, bound)) return;
+      report({
+        field: `taxes[${i}].taxableAmount`,
+        message: `${taxLabel(tax)} is charged on ${money.amount(tax.taxableAmount)}, but ${boundText}: ${joinList(marked)}. Exempt and zero-rated items carry no GST/HST, so either a line status or the amount taxed is wrong.`,
+      });
+    });
+  },
+);
+
+export const mathRules = [
+  linesAddUp,
+  totalAddsUp,
+  taxAmountMatchesRate,
+  taxOnNonTaxableSupplies,
+  taxOnNonTaxableLines,
+];

@@ -9,7 +9,7 @@ import type { Issue } from './types.ts';
 export interface ValidationReport {
   /** True when there are no errors. Warnings and infos don't fail a report. */
   ok: boolean;
-  /** Tier computed by the first pack that has tiers (ca-gst-hst: 1, 2 or 3). */
+  /** Tier computed by the first pack that has tiers (ca-gst-hst: 1, 2 or 3; none for a negative total). */
   tier?: number;
   /** Input format that was parsed. */
   format?: 'json' | 'ubl';
@@ -90,10 +90,11 @@ export function runPacks(
     if (ctx.tier !== undefined && report.tier === undefined) report.tier = ctx.tier;
 
     for (const rule of pack.rules) {
+      // A rule with a lowest tier needs a tier: it is skipped below that tier,
+      // and when the context has none (ca-gst-hst: a negative total).
       if (
         rule.appliesFromTier !== undefined &&
-        ctx.tier !== undefined &&
-        ctx.tier < rule.appliesFromTier
+        (ctx.tier === undefined || ctx.tier < rule.appliesFromTier)
       ) {
         continue;
       }

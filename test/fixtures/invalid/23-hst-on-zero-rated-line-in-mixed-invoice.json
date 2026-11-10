@@ -1,0 +1,37 @@
+{
+  "$comment": "HST charged on the whole subtotal, including a line marked zero-rated (basic groceries). Fictional parties; synthetic Luhn-valid GST/HST numbers.",
+  "$expect": {
+    "findings": ["CA-MATH-005"]
+  },
+  "invoiceNumber": "INV-2001",
+  "issueDate": "2026-04-02",
+  "currency": "CAD",
+  "supplier": {
+    "name": "Maple Leaf Grocers Inc.",
+    "gstHstNumber": "812345676RT0001",
+    "province": "ON",
+    "address": "100 Example St, Toronto ON M5V 0A1"
+  },
+  "lines": [
+    {
+      "description": "Basic groceries: milk, bread, eggs",
+      "lineTotal": "120.00",
+      "taxStatus": "zero-rated"
+    },
+    {
+      "description": "Paper towels and dish soap",
+      "lineTotal": "80.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "200.00",
+      "amount": "26.00"
+    }
+  ],
+  "subtotal": "200.00",
+  "total": "226.00"
+}

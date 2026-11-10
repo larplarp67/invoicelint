@@ -24,3 +24,10 @@ Minor: PARSE-005 for a 3-decimal amount has no "Fix:" hint, unlike the bad-date 
     npm install invoicelint
     node gen.mjs   # regenerates invoices/ and expected.json
     node run.mjs   # prints a pass/fail table
+
+## Status in invoicelint 0.2.0
+All four gaps and the minor point are fixed: CA-MATH-005 (g), CA-RATE-004 (h and 29, a warning to
+confirm place of supply), CA-TOTAL-001 (b: no tier, tier rules skipped) and a Fix hint on PARSE-005 (c).
+`29-ns-15-in-2026` now expects CA-RATE-004 in `expected.json`; the other 29 results are unchanged.
+The `edge/` expectations are in `expected-edge.json`, and `test/real-world.test.ts` checks all 38 files.
+Details: `docs/decisions.md`, section "0.2.0".

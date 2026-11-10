@@ -87,17 +87,37 @@ export function isCovered(date: string): boolean {
   return date >= COVERAGE_FROM;
 }
 
+const inForce = (e: RateEntry, date: string): boolean =>
+  e.effectiveFrom <= date && (e.effectiveTo === undefined || date <= e.effectiveTo);
+
 /** Distinct valid rates of a type on a date, ascending: ratesOn('2025-03-15', 'HST') -> ["13", "15"]. */
 export function ratesOn(date: string, type: RateType, table = RATE_TABLE): string[] {
-  const rates = table
-    .filter(
-      (e) =>
-        e.type === type &&
-        e.effectiveFrom <= date &&
-        (e.effectiveTo === undefined || date <= e.effectiveTo),
-    )
-    .map((e) => e.rate);
+  const rates = table.filter((e) => e.type === type && inForce(e, date)).map((e) => e.rate);
   return [...new Set(rates)].sort((a, b) => Number(a) - Number(b));
+}
+
+/**
+ * A province's or territory's own rate on a date: GST in a GST-only province,
+ * HST (combined) in a participating one. rateIn('NS', '2026-01-01') -> HST 14%.
+ */
+export function rateIn(
+  jurisdiction: Province,
+  date: string,
+  table = RATE_TABLE,
+): RateEntry | undefined {
+  return table.find((e) => e.jurisdiction === jurisdiction && inForce(e, date));
+}
+
+/** Provinces and territories whose rate on a date was `rate` of `type`, in table order. */
+export function jurisdictionsWith(
+  date: string,
+  type: RateType,
+  rate: string,
+  table = RATE_TABLE,
+): Province[] {
+  return table
+    .filter((e) => e.type === type && e.rate === rate && inForce(e, date))
+    .map((e) => e.jurisdiction);
 }
 
 /** A change of rate in one province: `from` until the day before `effectiveFrom`, then `to`. */
@@ -172,5 +192,7 @@ export const rates = {
   source: RATES_SOURCE,
   isCovered,
   ratesOn,
+  rateIn,
+  jurisdictionsWith,
   changesNear,
 } as const;

@@ -176,8 +176,10 @@
   },
   {
     "file": "29-ns-15-in-2026.json",
-    "desc": "Nova Scotia supplier still charging old 15% in 2026 (KNOWN LIMITATION: 15% is valid in NB/NL/PE, and the tool doesn't determine place of supply)",
-    "expect": []
+    "desc": "Nova Scotia supplier still charging old 15% in 2026 (15% is valid in NB/NL/PE, so CA-RATE-004 warns: confirm place of supply)",
+    "expect": [
+      "CA-RATE-004"
+    ]
   },
   {
     "file": "30-near-rate-change.json",

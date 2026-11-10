@@ -105,7 +105,7 @@ export interface JsonFileOutput {
   status: FileStatus;
   /** Input format that was parsed; absent when the file couldn't be read. */
   format?: 'json' | 'ubl';
-  /** Information tier (ca-gst-hst: 1, 2 or 3); absent when no rules ran. */
+  /** Information tier (ca-gst-hst: 1, 2 or 3); absent when no rules ran, and for a negative total. */
   tier?: number;
   /** Rule packs that ran. */
   packs: { id: string; version: string }[];

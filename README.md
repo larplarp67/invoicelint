@@ -53,7 +53,7 @@ As a library (Node or the browser; the core has no file-system access):
 import { validate } from 'invoicelint';
 
 const report = validate(invoiceJsonOrUblXml); // a string or a parsed object
-console.log(report.tier); // 1, 2 or 3
+console.log(report.tier); // 1, 2 or 3 (undefined for a negative total)
 for (const issue of [...report.errors, ...report.warnings]) {
   console.log(`${issue.ruleId} ${issue.field}: ${issue.message} (${issue.citation})`);
 }
@@ -70,7 +70,7 @@ The information required depends on the invoice total **including tax**, in Cana
 | $100 to $499.99 | the above, plus the supplier's GST/HST registration number, the GST/HST charged (or a tax-included statement with the rate), and which items are taxable when the invoice mixes tax statuses |
 | $500 or more    | the above, plus the buyer's name, the terms of payment, and a description of each item                                                                                                       |
 
-On top of that it checks the GST/HST registration number (format, check digit, `RT` program), the arithmetic (lines, subtotal, taxes, total), each tax amount against its rate, and whether the GST/HST rate was in force on the tax date.
+On top of that it checks the GST/HST registration number (format, check digit, `RT` program), the arithmetic (lines, subtotal, taxes, total), each tax amount against its rate, GST/HST charged on lines marked exempt or zero-rated, and whether the GST/HST rate was in force on the tax date and is the supplier's province's rate.
 
 **[All rules, with severity, tier, citation and fix hint →](./docs/rules.md)**
 
@@ -94,7 +94,7 @@ The format is detected automatically. Field reference, a UBL example and how UBL
 ```json
 {
   "schemaVersion": 1,
-  "tool": { "name": "invoicelint", "version": "0.1.0" },
+  "tool": { "name": "invoicelint", "version": "0.2.0" },
   "summary": {
     "files": 1,
     "passed": 0,
@@ -111,7 +111,7 @@ The format is detected automatically. Field reference, a UBL example and how UBL
       "status": "failed",
       "format": "json",
       "tier": 2,
-      "packs": [{ "id": "ca-gst-hst", "version": "0.1.0" }],
+      "packs": [{ "id": "ca-gst-hst", "version": "0.2.0" }],
       "errors": [
         {
           "ruleId": "CA-BN-001",
@@ -151,10 +151,10 @@ The reasoning behind every non-obvious choice, with sources: [docs/decisions.md]
 ## Limitations
 
 - **Not tax or legal advice.** invoicelint checks documents against its reading of the regulations; it can be wrong and doesn't replace an accountant.
-- **No place-of-supply determination.** An HST rate is accepted if any province had it on the tax date.
+- **No place-of-supply determination.** An HST rate passes the rate check if any province had it on the tax date. When the supplier's province is known and the rate isn't that province's, you get a warning to confirm place of supply (CA-RATE-004), since the supply can be made in another province.
 - **No QST rules** (Quebec), and PST rates aren't checked; their amounts still count in the totals.
 - **No registry lookups.** A GST/HST number can be well-formed but not registered; only the CRA's GST/HST Registry can confirm that, and it has no public API.
-- **Credit notes are recognized but not checked yet.** They show as `⊘ SKIPPED` (JSON status `skipped`) and never fail a run.
+- **Credit notes are recognized but not checked yet.** They show as `⊘ SKIPPED` (JSON status `skipped`) and never fail a run. An invoice with a negative total is treated as a refund: it gets no tier and the tier rules are skipped (CA-TOTAL-001), while the math, rates and GST/HST number are still checked.
 - Combined GST + PST totals (allowed by s.3(b)(iii)(B)) can't be represented yet and get a false "no GST/HST shown" warning.
 
 ## Roadmap

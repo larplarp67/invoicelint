@@ -6,6 +6,74 @@ This file records non-obvious decisions and open questions. Newest entries go at
 
 _None at the moment. Answers to the earlier ones are recorded under "Maintainer answers (2026-11-07)"._
 
+## 0.2.0: gaps found by the real-world test invoices (2026-11-10)
+
+### The real-world test set (`test/real-world/`)
+
+The maintainer ran 0.1.0 on a set of generated, fictional invoices and shared the result as `invoicelint-test-invoices.zip`, with a report ([RESULTS.md](../test/real-world/RESULTS.md)). It is kept in `test/real-world/` byte for byte, including the generator (`gen.mjs`) and the runner (`run.mjs`), so it is excluded from Prettier and ESLint: some files are malformed on purpose, and the scripts aren't part of the TypeScript project.
+
+- RESULTS.md says 36 invoices; the zip has 38 files: 30 in `invoices/` and 8 in `edge/`. All 38 are tested.
+- `invoices/` keeps its own `expected.json` (written by `gen.mjs`); `edge/` expectations are in `expected-edge.json`. `test/real-world.test.ts` compares the exact error and warning rule IDs, as `run.mjs` does, plus info IDs where listed, and checks that every rejected file's parse errors have a Fix hint.
+- 29 of the 30 main invoices give the same result as in 0.1.0. The exception is `29-ns-15-in-2026`, which was expected to pass only as a "known limitation". It now gets CA-RATE-004, and its expectation in `expected.json` and `gen.mjs` says so. The invoice itself is unchanged.
+
+The four gaps in RESULTS.md each became a fix below.
+
+### CA-MATH-005: GST/HST charged on lines marked exempt or zero-rated
+
+CA-MATH-004 only fired when _every_ line was exempt or zero-rated, so HST charged on groceries alongside taxable items passed. CA-MATH-005 (warning) compares each GST/HST tax line's `taxableAmount` with the most GST/HST could be charged on. Citation ETA s.165(1), (2), (3): GST and HST are imposed on taxable supplies, and the rate on a zero-rated supply is 0%. An exempt supply isn't a taxable supply.
+
+- **The bound** is the sum of the lines _not_ marked exempt or zero-rated, plus document-level charges. The request said "lines marked taxable". Lines without a status count as possibly taxable here, because CA-ITC-013 already asks for them to be marked, and treating them as non-taxable would report the same gap twice (real-world invoice 24). Allowances are left out, so the bound stays an upper bound and can't give a false positive.
+- **Only when a line is marked exempt or zero-rated, and not all of them** (that case stays CA-MATH-004). Without such a line, tax on more than the lines is a subtotal problem (CA-MATH-001), as in real-world invoice 17.
+- **Exact**, like CA-MATH-001: both sides are displayed amounts, so there is no rounding.
+- **Warning**, like CA-MATH-004: either a line status or the tax can be the wrong part.
+- PST and QST are ignored: their taxable base can legitimately differ from GST/HST's.
+- On a refund (negative amounts) the comparison runs in the refund's direction.
+
+### CA-RATE-004: the supplier's province's rate, as a place-of-supply warning
+
+The rate checks accept an HST rate if any province had it, so an Ontario supplier charging only 5% GST, or a Nova Scotia supplier still charging 15% in 2026 (the rate in New Brunswick, Newfoundland and Labrador and PEI), passed. When `supplier.province` is set (JSON) or derived from `CountrySubentity` (UBL), CA-RATE-004 compares each GST/HST line with that province's rate on the tax date. The message ends with "confirm place of supply", as requested.
+
+It's a **warning, not an error**: GST/HST depends on where the supply is made (ETA s.144.1: a supply made in Canada is made in a province if it is made there "under the rules set out in Schedule IX"; s.165(2) applies the participating province's rate), and that can be another province than the supplier's. For example, a service to a buyer elsewhere can carry the buyer's province's rate. invoicelint doesn't determine place of supply; the fix hint points to CRA GST/HST Memorandum 3-3-2. Citation: ETA s.144.1, s.165(2), Sch. IX (checked on laws-lois.justice.gc.ca, 2026-11-10).
+
+It stays silent when:
+
+- there is no supplier province, no tax date, or the date is before the rate table's coverage (CA-RATE-003 already says rate checks were skipped);
+- the tax type and rate are the province's own;
+- the rate is the old or new rate of a change in the supplier's province within the transition window (default 60 days). Real-world invoice 30 is a Nova Scotia supplier at 15% ten days after the cut to 14%, and the transitional rules may well make 15% right;
+- the rate wasn't in force anywhere that day (GST at 7%, HST at 14% before 2025-04-01). CA-RATE-001/002 already report that, so CA-RATE-004 doesn't add a second finding (real-world invoices 19 and 20).
+
+This supersedes part of "Rate checks use the tax date, against any province" below.
+
+**Tax-included statements.** Found after the first pass: no rate rule read `taxIncludedStatement.rate`, so a Nova Scotia invoice in 2026 saying "HST 15% included", or "HST 13% included", passed. CA-RATE-004 now checks that rate too, on `taxIncludedStatement.rate`. The statement has no tax type, so 5% is read as GST alone and 13%, 14% or 15% as HST. SOR/91-45 s.3(b)(iv)(B) asks for the "total tax rate" of the GST/HST, but in GST-only provinces a tax-included receipt often states a rate that includes provincial sales tax (BC 12%, Quebec 14.975%), and invoicelint doesn't know PST or QST rates. So:
+
+- the province's own rate (or a rate inside its transition window) → no finding;
+- another province's GST or HST rate that day → the same place-of-supply warning as for a tax line;
+- a rate that was no GST or HST rate anywhere that day → an **info** saying it wasn't compared ("…so it may include provincial sales tax"), not a warning.
+
+CA-RATE-001/002 still don't read the statement: with no tax type, and PST possibly included, a rate in force nowhere can't be called wrong. Without a supplier province, the statement's rate isn't checked at all.
+
+### CA-TOTAL-001: a negative total is treated as a refund
+
+This replaces the 0.1.0 behaviour recorded under "Credit notes: recognized, not checked": a JSON invoice with a negative total used to land in tier 1 and be checked as a normal invoice, with "Tier 1: the total of -$50.00 … is under $100". Now:
+
+- **No tier.** `createCaContext` leaves `tier` out when the total is below zero, and the report has no `tier`. A zero total is still tier 1.
+- **Tier rules are skipped.** The engine now skips a rule with `appliesFromTier` when the context has no tier (before, it ran it). CA-TIER-001 and CA-TIER-002 now declare `appliesFromTier: 1`, so they're skipped too; `docs/rules.md` shows them as "1+" instead of "all".
+- **Other rules still run:** CA-BN-001/002, the math rules and the rate rules. CA-CUR-001 also still runs, since currency conversion applies whatever the sign (ETA s.159), with the tier part of its message and fix removed. OpenPeppol's `base-negative-inv-correction.xml` example keeps its CA-CUR-001, which `test/peppol.test.ts` expects.
+- **CA-TOTAL-001 (info)** explains this. Citation: ETA s.232(3)(a), under which a refund or credit of tax is documented with "a credit note, containing prescribed information", and SOR/91-44, the regulation that prescribes it. Credit note rules are still on the roadmap.
+
+Known limitation: the rate checks use the refund's own date. A refund of a supply made before a rate change can legitimately show the old rate; past the transition window that gives CA-RATE-004 (a warning) or CA-RATE-001/002 (an error).
+
+### Every parse error has a Fix hint
+
+The bad-date PARSE-005 had a Fix hint; the 3-decimal amount one didn't (the gap in RESULTS.md). Checking the other input errors found most had none. Now every one does:
+
+- **Amounts, rates and quantities** (PARSE-005): each `parseMoney()` / `parseDecimal()` failure carries a `fix` (not a valid amount, empty, too many decimals, too large, out of range). The model passes it to the JSON parser as the zod issue's `params.fix`. Rates add "Rates are in percent: 13 means 13%."
+- **Values not in the allowed list or format** (PARSE-005): field-specific hints for the currency, province, line tax status, tax type and `taxIncludedStatement.included` (a table in `src/parsers/json.ts`; zod doesn't pass `params` through regex or enum checks), with a generic hint for any other field.
+- **Wrong JSON type** (PARSE-004): a hint by the type expected (text in quotes, an object, a list).
+- **XML** (PARSE-UBL-002): too-deep nesting now says so in plain words ("nested more than 100 elements deep") instead of the parser's "Maximum nested tags exceeded", and "no root element" and other read failures have a hint. A file that is only an XML declaration used to say "line 1, column undefined"; positions the validator doesn't know are now left out.
+
+UBL input goes through the same model, so its amounts, dates and currency get the same hints. `test/parsers/json.test.ts` feeds one bad input per failure path and fails if any error lacks a hint; `test/parsers/xml.test.ts` does the same for malformed XML.
+
 ## Phase 5: CLI, packaging, release prep
 
 ### `engines`: Node `>=22.12`, not `>=20`
@@ -75,7 +143,7 @@ Test cases from the maintainer: HST 14% on 2025-01-15 → error; on 2025-03-20 �
 
 ### Credit notes: recognized, not checked
 
-A UBL `CreditNote` gives PARSE-UBL-010 (info): "credit notes are recognized but not checked yet". No invoice rules run on it (no tier, no ITC rules), the report is `ok` with no packs, and the CLI prints NOT CHECKED. Credit notes have their own prescribed information under the **Credit Note and Debit Note Information (GST/HST) Regulations**, SOR/91-44. (The maintainer's note said "Credit Note Information (GST/HST) Regulations"; the regulation's actual title, checked on laws-lois.justice.gc.ca, includes "and Debit Note".) A credit note pack is on the README roadmap. A JSON document with a negative total is still checked as an invoice (it lands in tier 1): the JSON model has no credit-note type yet.
+A UBL `CreditNote` gives PARSE-UBL-010 (info): "credit notes are recognized but not checked yet". No invoice rules run on it (no tier, no ITC rules), the report is `ok` with no packs, and the CLI prints NOT CHECKED. Credit notes have their own prescribed information under the **Credit Note and Debit Note Information (GST/HST) Regulations**, SOR/91-44. (The maintainer's note said "Credit Note Information (GST/HST) Regulations"; the regulation's actual title, checked on laws-lois.justice.gc.ca, includes "and Debit Note".) A credit note pack is on the README roadmap. A JSON document with a negative total is still checked as an invoice (it lands in tier 1): the JSON model has no credit-note type yet. _(Changed in 0.2.0: a negative total now gets no tier and the tier rules are skipped. See "CA-TOTAL-001" above.)_
 
 ### Bare 9-digit BN: CA-BN-003 (warning)
 
@@ -238,7 +306,7 @@ The table's **New Brunswick** row shows 13% for July–September 2016, but CRA's
 
 ### Rate checks use the tax date, against any province
 
-_Superseded in part by "Tax date and a transition window" above._ The date for rate checks was `issueDate`, else `taxPaidDate`; it is now the earlier of the two. Transition rules (e.g. Nova Scotia 2025) tie the rate to when consideration is paid or becomes due, which usually matches the invoice date; an invoice for consideration that became due before a change could legitimately show the old rate. Place of supply isn't determined yet, so an HST rate passes if **any** province had it on that date (`2025-03-15`: 13% or 15%; `2025-04-15`: 13%, 14% or 15%). PST and QST rates aren't checked.
+_Superseded in part by "Tax date and a transition window" and, for the supplier's province, by "CA-RATE-004" above._ The date for rate checks was `issueDate`, else `taxPaidDate`; it is now the earlier of the two. Transition rules (e.g. Nova Scotia 2025) tie the rate to when consideration is paid or becomes due, which usually matches the invoice date; an invoice for consideration that became due before a change could legitimately show the old rate. Place of supply isn't determined yet, so an HST rate passes if **any** province had it on that date (`2025-03-15`: 13% or 15%; `2025-04-15`: 13%, 14% or 15%). PST and QST rates aren't checked.
 
 ### Pack selection
 

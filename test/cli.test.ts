@@ -196,7 +196,7 @@ describe('JSON output shape (documented in docs/json-output.md)', () => {
       (await run(['check', '--format', 'json', PASSING, FAILING, 'missing.json'])).out,
     );
     expect(out.schemaVersion).toBe(1);
-    expect(out.tool).toEqual({ name: 'invoicelint', version: '0.1.0' });
+    expect(out.tool).toEqual({ name: 'invoicelint', version: '0.2.0' });
     expect(out.summary).toEqual({
       files: 3,
       passed: 1,
@@ -379,7 +379,7 @@ describe('other commands', () => {
   });
 
   it('--version prints the package version', async () => {
-    expect((await run(['--version'])).out.trim()).toBe('0.1.0');
+    expect((await run(['--version'])).out.trim()).toBe('0.2.0');
   });
 });
 

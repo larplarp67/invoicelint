@@ -157,12 +157,15 @@ describe('CA-ITC-013 status of each taxable supply', () => {
   });
 
   it('warns on an unmarked line when another line is marked exempt', () => {
-    const report = check(
-      mixed([
+    const report = check({
+      ...mixed([
         { description: 'Consulting', lineTotal: '121.24' },
         { description: 'Membership dues', lineTotal: '100.00', taxStatus: 'exempt' },
       ]),
-    );
+      // HST on the consulting line only, so CA-MATH-005 (tax on the exempt line) stays out.
+      taxes: [{ type: 'HST', rate: 13, taxableAmount: '121.24', amount: '15.76' }],
+      total: '237.00',
+    });
     expect(findings(report)).toEqual(['CA-ITC-013']);
     expect(byRule(report, 'CA-ITC-013').map((i) => i.field)).toEqual(['lines[0].taxStatus']);
   });

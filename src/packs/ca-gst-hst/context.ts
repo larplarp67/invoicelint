@@ -28,7 +28,11 @@ export type MoneyHelpers = typeof money & {
 
 /** The context every ca-gst-hst rule receives. */
 export interface CaContext extends RuleContext {
-  tier: Tier;
+  /**
+   * Information tier from the total. Absent when the total is negative: that
+   * looks like a refund or credit note, so tier rules don't run (CA-TOTAL-001).
+   */
+  tier?: Tier;
   /**
    * Tax date for date-dependent checks: the earlier of the invoice date and
    * the date tax was paid (ETA s.168(1)). See taxDate().
@@ -72,7 +76,7 @@ export function createCaContext(invoice: Invoice, options: EngineOptions): CaCon
   return {
     invoice,
     options,
-    tier: computeTier(invoice.total),
+    ...(invoice.total < 0 ? {} : { tier: computeTier(invoice.total) }),
     ...taxDate(invoice),
     money: { ...money, amount: (cents) => formatAmount(cents, invoice.currency) },
     rates,

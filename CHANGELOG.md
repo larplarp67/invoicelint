@@ -4,6 +4,29 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-10
+
+Fixes the four gaps found by running 0.1.0 on a set of 38 real-world-style test invoices, which are now part of the test suite, and two similar gaps found while fixing them: tax-included rates were never checked, and most input errors had no Fix hint. The `ca-gst-hst` pack is version 0.2.0, with 25 rules.
+
+### Added
+
+- **CA-MATH-005** (warning): GST/HST charged on more than the lines not marked exempt or zero-rated, for example HST on zero-rated groceries as well as the taxable items. Before, only an invoice whose lines were _all_ exempt or zero-rated was caught (CA-MATH-004).
+- **CA-RATE-004** (warning): the supplier's province is known and the GST/HST rate charged isn't that province's rate on the tax date, for example an Ontario supplier charging 5% GST, or a Nova Scotia supplier still charging 15% in 2026. The message says to confirm place of supply. It's a warning, not an error, because the supply can be made in another province. It also checks the rate in a tax-included statement ("HST 15% included"), which no rule read before. A stated rate that is no GST or HST rate, such as BC's 12% GST + PST, gets an info instead.
+- **CA-TOTAL-001** (info): a negative total looks like a refund or credit note, so the tier rules aren't applied.
+- **A Fix hint on every input error.** Many had none. Now amounts with too many decimals or in a format that isn't accepted, rates out of range, unknown province codes, tax statuses and tax types, a lowercase currency, values of the wrong type, and malformed or too-deeply nested XML all say how to fix them.
+- **Real-world test invoices** in `test/real-world/`: 30 invoices with their expected results, 8 edge cases (messy input, rejected input and the four gaps), and the report that found the gaps.
+
+### Changed
+
+- **A negative total gets no tier.** The report has no `tier`, and CA-TIER-001, CA-TIER-002, the CA-ITC rules and CA-BN-003 don't run. The math, rate and GST/HST number checks still do. CA-CUR-001 still warns about a foreign currency, without the tier wording. In 0.1.0 such a document was checked as a tier-1 invoice.
+- **Engine:** a rule with `appliesFromTier` is now skipped when the pack's context has no tier (it used to run). `CaContext.tier` is optional. CA-TIER-001 and CA-TIER-002 declare `appliesFromTier: 1`, so `docs/rules.md` lists them as tier "1+".
+- New rate-table lookups `rateIn()` and `jurisdictionsWith()` on the pack's `rates` helpers.
+
+### Fixed
+
+- An XML file containing only an XML declaration reported its error position as "line 1, column undefined".
+- Too-deeply nested XML now says "nested more than 100 elements deep" instead of the parser's "Maximum nested tags exceeded".
+
 ## [0.1.0] - 2026-11-09
 
 First release.
@@ -18,5 +41,6 @@ First release.
 - **Library** `validate()` that runs in Node and in the browser, with TSDoc on every export.
 - Generated rule reference (`docs/rules.md`), design decisions (`docs/decisions.md`), input and output documentation.
 
-[Unreleased]: https://github.com/larplarp67/invoicelint/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/larplarp67/invoicelint/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/larplarp67/invoicelint/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/larplarp67/invoicelint/releases/tag/v0.1.0

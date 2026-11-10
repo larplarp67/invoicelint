@@ -174,7 +174,7 @@ add("28-rounding-1-cent.json", "HST on $99.99 is $12.9987 → $13.00; invoice sh
   lines: [{ description: "Bluetooth speaker", lineTotal: "99.99", taxStatus: "taxable" }],
   taxes: [{ type: "HST", rate: 13, taxableAmount: "99.99", amount: "12.99" }], subtotal: "99.99", total: "112.98",
 });
-add("29-ns-15-in-2026.json", "Nova Scotia supplier still charging old 15% in 2026 (KNOWN LIMITATION: 15% is valid in NB/NL/PE, and the tool doesn't determine place of supply)", [], {
+add("29-ns-15-in-2026.json", "Nova Scotia supplier still charging old 15% in 2026 (15% is valid in NB/NL/PE, so CA-RATE-004 warns: confirm place of supply)", ["CA-RATE-004"], {
   invoiceNumber: "NS-LATE", issueDate: "2026-09-01", supplier: { name: "Dartmouth Auto Detailing", gstHstNumber: gst("96677889"), province: "NS" },
   lines: [{ description: "Full interior detail", lineTotal: "200.00", taxStatus: "taxable" }],
   taxes: [{ type: "HST", rate: 15, taxableAmount: "200.00", amount: "30.00" }], subtotal: "200.00", total: "230.00",

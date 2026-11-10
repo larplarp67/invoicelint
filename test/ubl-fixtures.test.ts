@@ -65,6 +65,7 @@ function projection(inv: Invoice) {
 /** JSON fixtures that can't have a UBL twin, and why. */
 const NO_UBL_TWIN: Record<string, string> = {
   '13-tax-included-no-rate': 'UBL has no "tax included" statement element',
+  '26-nova-scotia-tax-included-at-15-percent': 'UBL has no "tax included" statement element',
   '18-no-date': 'cbc:IssueDate is mandatory in UBL (its absence is PARSE-UBL-031)',
   'intermediary-named-supplier-number-shown': 'UBL has no s.3 intermediary element',
 };

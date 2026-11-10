@@ -21,7 +21,11 @@ export interface EngineOptions {
 export interface RuleContext {
   invoice: Invoice;
   options: EngineOptions;
-  /** Tier, for packs that have tiers. Rules with `appliesFromTier` are skipped below it. */
+  /**
+   * Tier, for packs that have tiers. Rules with `appliesFromTier` are skipped
+   * below it, and also when it is absent (ca-gst-hst leaves it out for a
+   * negative total).
+   */
   tier?: number;
 }
 
@@ -37,7 +41,10 @@ export interface RuleMeta {
   citation: string;
   /** Default fix hint, written for a bookkeeper. */
   fix: string;
-  /** Lowest tier the rule applies to. Omit for rules that apply at every tier. */
+  /**
+   * Lowest tier the rule applies to. Omit for rules that apply at every tier.
+   * A rule that sets it doesn't run when the context has no tier.
+   */
   appliesFromTier?: number;
 }
 

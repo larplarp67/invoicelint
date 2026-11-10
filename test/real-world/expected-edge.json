@@ -1,0 +1,50 @@
+[
+  {
+    "file": "a-comma-amounts.json",
+    "desc": "Comma amounts (\"12,500.00\"), a number instead of a string, GST/HST number with spaces and lowercase \"rt\" (tier 3, everything present)",
+    "expect": [],
+    "infos": ["CA-TIER-001"]
+  },
+  {
+    "file": "b-negative.json",
+    "desc": "Negative total (a refund): no tier, tier rules not applied",
+    "expect": [],
+    "infos": ["CA-MATH-001", "CA-TOTAL-001"]
+  },
+  {
+    "file": "c-3-decimals.json",
+    "desc": "Amount with 3 decimal places: rejected, with a Fix hint",
+    "expect": ["PARSE-005"],
+    "infos": []
+  },
+  {
+    "file": "d-broken.json",
+    "desc": "Broken JSON: rejected",
+    "expect": ["PARSE-001"],
+    "infos": []
+  },
+  {
+    "file": "e-bad-date.json",
+    "desc": "Impossible date (2026-13-45): rejected",
+    "expect": ["PARSE-005"],
+    "infos": []
+  },
+  {
+    "file": "f-ubl.xml",
+    "desc": "Peppol-style UBL XML invoice, Ontario, HST 13% (tier 3, everything present)",
+    "expect": [],
+    "infos": ["CA-TIER-001"]
+  },
+  {
+    "file": "g-hst-on-groceries.json",
+    "desc": "HST charged on zero-rated groceries as well as the taxable items",
+    "expect": ["CA-MATH-005"],
+    "infos": ["CA-TIER-001"]
+  },
+  {
+    "file": "h-ontario-charging-gst-only.json",
+    "desc": "Ontario supplier charges 5% GST instead of 13% HST: confirm place of supply",
+    "expect": ["CA-RATE-004"],
+    "infos": ["CA-TIER-001"]
+  }
+]

@@ -1,0 +1,26 @@
+{
+  "$comment": "A refund issued as an invoice with a negative total (returned business cards). Ontario, HST 13%. No tier: CA-TOTAL-001 explains that tier rules weren't applied; the math and rate still check out. Fictional supplier; synthetic Luhn-valid BN.",
+  "$expect": {
+    "findings": [],
+    "infos": ["CA-TOTAL-001"]
+  },
+  "invoiceNumber": "INV-1043",
+  "issueDate": "2026-04-09",
+  "currency": "CAD",
+  "supplier": {
+    "name": "Maple Leaf Printing Inc.",
+    "gstHstNumber": "812345676RT0001",
+    "province": "ON",
+    "address": "100 Example St, Toronto ON M5V 0A1"
+  },
+  "lines": [
+    {
+      "description": "Refund: business cards, 500 pcs (returned)",
+      "lineTotal": "-150.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [{ "type": "HST", "rate": 13, "taxableAmount": "-150.00", "amount": "-19.50" }],
+  "subtotal": "-150.00",
+  "total": "-169.50"
+}

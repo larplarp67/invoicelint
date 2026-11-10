@@ -201,3 +201,140 @@ describe('CA-MATH-004 tax charged on exempt / zero-rated supplies', () => {
     expect(byRule(report, 'CA-MATH-004')).toEqual([]);
   });
 });
+
+describe('CA-MATH-005 GST/HST charged on lines marked exempt or zero-rated', () => {
+  /** $110 zero-rated groceries + $50 taxable items, HST charged on `taxableAmount`. */
+  const groceries = (taxableAmount: string, amount: string, total: string) => ({
+    ...tier2,
+    lines: [
+      { description: 'Basic groceries', lineTotal: '110.00', taxStatus: 'zero-rated' as const },
+      { description: 'Paper towels', lineTotal: '30.00', taxStatus: 'taxable' as const },
+      { description: 'Sparkling water', lineTotal: '20.00', taxStatus: 'taxable' as const },
+    ],
+    subtotal: '160.00',
+    taxes: [{ type: 'HST' as const, rate: 13, taxableAmount, amount }],
+    total,
+  });
+
+  it('warns when HST is charged on the zero-rated line too', () => {
+    const report = check(groceries('160.00', '20.80', '180.80'));
+    expect(findings(report)).toEqual(['CA-MATH-005']);
+    expect(report.ok).toBe(true); // a warning: the statuses or the tax could be wrong
+    expect(byRule(report, 'CA-MATH-005')).toEqual([
+      expect.objectContaining({
+        severity: 'warning',
+        field: 'taxes[0].taxableAmount',
+        message:
+          'HST is charged on $160.00, but the lines not marked exempt or zero-rated add up to $50.00: line 1 ("Basic groceries") is marked zero-rated. Exempt and zero-rated items carry no GST/HST, so either a line status or the amount taxed is wrong.',
+      }),
+    ]);
+  });
+
+  it('is silent when HST is charged on the taxable lines only, or less', () => {
+    expect(findings(check(groceries('50.00', '6.50', '166.50')))).toEqual([]);
+    expect(byRule(check(groceries('40.00', '5.20', '165.20')), 'CA-MATH-005')).toEqual([]);
+  });
+
+  it('counts unmarked lines as possibly taxable (CA-ITC-013 asks for the marking)', () => {
+    const report = check({
+      ...tier2,
+      lines: [
+        { description: 'Prescription', lineTotal: '54.00', taxStatus: 'zero-rated' },
+        { description: 'Electric toothbrush', lineTotal: '200.00' },
+      ],
+      subtotal: '254.00',
+      taxes: [{ type: 'HST', rate: 13, taxableAmount: '200.00', amount: '26.00' }],
+      total: '280.00',
+    });
+    expect(findings(report)).toEqual(['CA-ITC-013']);
+  });
+
+  it('names every line marked exempt or zero-rated', () => {
+    const report = check({
+      ...tier2,
+      lines: [
+        { description: 'Groceries', lineTotal: '100.00', taxStatus: 'zero-rated' },
+        { description: 'Soap', lineTotal: '50.00', taxStatus: 'taxable' },
+        { lineTotal: '20.00', taxStatus: 'exempt' },
+        { description: 'Bus pass', lineTotal: '30.00', taxStatus: 'exempt' },
+      ],
+      subtotal: '200.00',
+      taxes: [{ type: 'HST', rate: 13, taxableAmount: '200.00', amount: '26.00' }],
+      total: '226.00',
+    });
+    expect(byRule(report, 'CA-MATH-005')[0]?.message).toContain(
+      'add up to $50.00: line 1 ("Groceries") is marked zero-rated, line 3 is marked exempt, and line 4 ("Bus pass") is marked exempt.',
+    );
+  });
+
+  it('allows document-level charges (e.g. freight) in the taxed amount', () => {
+    const report = check({
+      ...groceries('60.00', '7.80', '177.80'),
+      chargeTotal: '10.00',
+    });
+    expect(byRule(report, 'CA-MATH-005')).toEqual([]);
+    const over = check({ ...groceries('160.00', '20.80', '190.80'), chargeTotal: '10.00' });
+    expect(byRule(over, 'CA-MATH-005')[0]?.message).toContain(
+      'the lines not marked exempt or zero-rated ($50.00) plus charges ($10.00) come to $60.00',
+    );
+  });
+
+  it('leaves the all-exempt case to CA-MATH-004', () => {
+    const report = check({
+      ...tier2,
+      lines: [{ description: 'Basic groceries', lineTotal: '221.24', taxStatus: 'zero-rated' }],
+    });
+    expect(findings(report)).toEqual(['CA-MATH-004']);
+  });
+
+  it('is silent when no line is marked exempt or zero-rated', () => {
+    // Lines $350, HST on $360: that is a subtotal problem (CA-MATH-001), not this one.
+    const report = check({
+      ...tier2,
+      lines: [
+        { description: 'Landing page', lineTotal: '250.00', taxStatus: 'taxable' },
+        { description: 'Hosting setup', lineTotal: '100.00', taxStatus: 'taxable' },
+      ],
+      subtotal: '360.00',
+      taxes: [{ type: 'HST', rate: 13, taxableAmount: '360.00', amount: '46.80' }],
+      total: '406.80',
+    });
+    expect(findings(report)).toEqual(['CA-MATH-001']);
+  });
+
+  it('ignores PST and QST, whose base can differ', () => {
+    const report = check({
+      ...groceries('50.00', '6.50', '177.70'),
+      supplier: { ...tier2.supplier, province: 'BC' },
+      taxes: [
+        { type: 'GST', rate: 5, taxableAmount: '50.00', amount: '2.50' },
+        { type: 'PST', rate: 7, taxableAmount: '160.00', amount: '11.20' },
+      ],
+      total: '173.70',
+    });
+    expect(findings(report)).toEqual([]);
+  });
+
+  it('works on a refund: HST on -$160.00 when only -$50.00 can carry it', () => {
+    const refund = {
+      ...tier2,
+      lines: [
+        { description: 'Groceries', lineTotal: '-110.00', taxStatus: 'zero-rated' as const },
+        { description: 'Soap', lineTotal: '-50.00', taxStatus: 'taxable' as const },
+      ],
+      subtotal: '-160.00',
+    };
+    const over = check({
+      ...refund,
+      taxes: [{ type: 'HST', rate: 13, taxableAmount: '-160.00', amount: '-20.80' }],
+      total: '-180.80',
+    });
+    expect(findings(over)).toEqual(['CA-MATH-005']);
+    const fine = check({
+      ...refund,
+      taxes: [{ type: 'HST', rate: 13, taxableAmount: '-50.00', amount: '-6.50' }],
+      total: '-166.50',
+    });
+    expect(findings(fine)).toEqual([]);
+  });
+});

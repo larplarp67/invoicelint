@@ -1,0 +1,33 @@
+{
+  "$comment": "Nova Scotia supplier still charging the old 15% HST a year after the cut to 14%. 15% is the HST rate in New Brunswick, Newfoundland and Labrador and PEI, so it passes CA-RATE-002 but gets a place-of-supply warning. Fictional parties; synthetic Luhn-valid GST/HST numbers.",
+  "$expect": {
+    "findings": ["CA-RATE-004"],
+    "ok": true
+  },
+  "invoiceNumber": "INV-2001",
+  "issueDate": "2026-04-02",
+  "currency": "CAD",
+  "supplier": {
+    "name": "Bluenose Printing Ltd.",
+    "gstHstNumber": "812345676RT0001",
+    "province": "NS",
+    "address": "300 Example Rd, Halifax NS B3H 0A1"
+  },
+  "lines": [
+    {
+      "description": "Brochure printing, 1,000 copies",
+      "lineTotal": "200.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 15,
+      "taxableAmount": "200.00",
+      "amount": "30.00"
+    }
+  ],
+  "subtotal": "200.00",
+  "total": "230.00"
+}

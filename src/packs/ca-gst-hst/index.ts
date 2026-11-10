@@ -7,12 +7,12 @@ import { bnRules } from './rules/bn.ts';
 import { itcRules } from './rules/itc.ts';
 import { mathRules } from './rules/math.ts';
 import { rateRules } from './rules/rates.ts';
-import { currencyNotCad, thresholdsChanged, tierDetected } from './rules/tier.ts';
+import { currencyNotCad, negativeTotal, thresholdsChanged, tierDetected } from './rules/tier.ts';
 
 /** The Canadian GST/HST rule pack: input tax credit information (SOR/91-45 s.3), registration numbers, tax math and rates. */
 export const caGstHstPack: RulePack<CaContext> = {
   id: 'ca-gst-hst',
-  version: '0.1.0',
+  version: '0.2.0',
   title: 'Canada GST/HST: input tax credit information (SOR/91-45 s.3) and tax math',
   // The only pack so far, so it runs on everything. Once other packs exist this
   // should look at currency, supplier province and registration number.
@@ -21,6 +21,7 @@ export const caGstHstPack: RulePack<CaContext> = {
   rules: [
     tierDetected,
     thresholdsChanged,
+    negativeTotal,
     currencyNotCad,
     ...itcRules,
     ...bnRules,

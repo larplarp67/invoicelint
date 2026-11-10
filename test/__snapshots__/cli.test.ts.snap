@@ -5,7 +5,7 @@ exports[`snapshots (colours off) > json: credit note (skipped) 1`] = `
   "schemaVersion": 1,
   "tool": {
     "name": "invoicelint",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "summary": {
     "files": 1,
@@ -45,7 +45,7 @@ exports[`snapshots (colours off) > json: failing invoice 1`] = `
   "schemaVersion": 1,
   "tool": {
     "name": "invoicelint",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "summary": {
     "files": 1,
@@ -66,7 +66,7 @@ exports[`snapshots (colours off) > json: failing invoice 1`] = `
       "packs": [
         {
           "id": "ca-gst-hst",
-          "version": "0.1.0"
+          "version": "0.2.0"
         }
       ],
       "errors": [
@@ -101,7 +101,7 @@ exports[`snapshots (colours off) > json: passing invoice 1`] = `
   "schemaVersion": 1,
   "tool": {
     "name": "invoicelint",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "summary": {
     "files": 1,
@@ -122,7 +122,7 @@ exports[`snapshots (colours off) > json: passing invoice 1`] = `
       "packs": [
         {
           "id": "ca-gst-hst",
-          "version": "0.1.0"
+          "version": "0.2.0"
         }
       ],
       "errors": [],

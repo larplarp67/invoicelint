@@ -102,6 +102,17 @@ describe('runPacks', () => {
     expect(report.ok).toBe(true);
   });
 
+  it('skips rules with a lowest tier when the context has no tier', () => {
+    const noTier: RulePack = {
+      ...testPack(),
+      createContext: (inv, options) => ({ invoice: inv, options }),
+    };
+    const report = runPacks(invoice, [noTier]);
+    expect(report.tier).toBeUndefined();
+    expect(report.warnings).toEqual([]); // T-WARN (tier 2+) and T-TIER3 skipped
+    expect(report.errors.map((i) => i.ruleId)).toEqual(['T-ERR']); // rules without a tier run
+  });
+
   it('skips packs whose appliesTo() is false unless selected explicitly', () => {
     const pack = testPack({ appliesTo: () => false });
     expect(runPacks(invoice, [pack]).packs).toEqual([]);

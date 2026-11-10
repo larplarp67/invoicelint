@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_ENGINE_OPTIONS } from '../../../src/engine.ts';
+import type { Province } from '../../../src/model.ts';
 import { taxDate } from '../../../src/packs/ca-gst-hst/context.ts';
 import { caGstHstPack } from '../../../src/packs/ca-gst-hst/index.ts';
 import {
@@ -7,7 +8,9 @@ import {
   RATES_SOURCE,
   RATE_TABLE,
   changesNear,
+  jurisdictionsWith,
   rateChanges,
+  rateIn,
   ratesOn,
 } from '../../../src/packs/ca-gst-hst/rates.ts';
 import { byRule, check, findings, tier2 } from '../../helpers/ca.ts';
@@ -61,8 +64,14 @@ describe('rate table', () => {
   });
 });
 
-const hstInvoice = (rate: number, issueDate: string) => ({
+/** tier2 without a supplier province, so CA-RATE-004 (the province's own rate) stays out. */
+const anyProvince = {
   ...tier2,
+  supplier: { name: 'Supplier Inc.', gstHstNumber: '812345676RT0001' },
+};
+
+const hstInvoice = (rate: number, issueDate: string) => ({
+  ...anyProvince,
   issueDate,
   lines: [{ description: 'Printing', lineTotal: '200.00', taxStatus: 'taxable' as const }],
   subtotal: '200.00',
@@ -90,6 +99,7 @@ describe('CA-RATE-001 GST rate', () => {
   it('accepts 5%, written as "5.0"', () => {
     const report = check({
       ...tier2,
+      supplier: { ...tier2.supplier, province: 'AB' },
       lines: [{ description: 'Printing', lineTotal: '200.00', taxStatus: 'taxable' }],
       subtotal: '200.00',
       taxes: [{ type: 'GST', rate: '5.0', taxableAmount: '200.00', amount: '10.00' }],
@@ -170,6 +180,7 @@ describe('CA-RATE-002 HST rate', () => {
   it('does not check PST or QST rates', () => {
     const report = check({
       ...tier2,
+      supplier: { ...tier2.supplier, province: 'BC' },
       lines: [{ description: 'Printing', lineTotal: '200.00', taxStatus: 'taxable' }],
       subtotal: '200.00',
       taxes: [
@@ -245,5 +256,193 @@ describe('CA-RATE-003 rate checks skipped', () => {
 
   it('is silent when there is no GST/HST rate to check', () => {
     expect(byRule(check({ total: 1 }), 'CA-RATE-003')).toEqual([]);
+  });
+});
+
+describe('rateIn and jurisdictionsWith', () => {
+  it("gives a province's own rate on a date", () => {
+    expect(rateIn('NS', '2025-03-31')).toMatchObject({ type: 'HST', rate: '15' });
+    expect(rateIn('NS', '2025-04-01')).toMatchObject({ type: 'HST', rate: '14' });
+    expect(rateIn('AB', '2026-01-01')).toMatchObject({ type: 'GST', rate: '5' });
+  });
+
+  it('lists the provinces that had a rate on a date', () => {
+    expect(jurisdictionsWith('2026-01-01', 'HST', '15')).toEqual(['NB', 'NL', 'PE']);
+    expect(jurisdictionsWith('2025-03-31', 'HST', '15')).toEqual(['NB', 'NL', 'NS', 'PE']);
+    expect(jurisdictionsWith('2026-01-01', 'HST', '14')).toEqual(['NS']);
+    expect(jurisdictionsWith('2026-01-01', 'HST', '7')).toEqual([]);
+  });
+});
+
+describe("CA-RATE-004 the supplier's province's rate", () => {
+  const inProvince = (
+    province: Province,
+    type: 'GST' | 'HST',
+    rate: number,
+    issueDate = '2026-04-02',
+  ) =>
+    check({
+      ...tier2,
+      issueDate,
+      supplier: { ...tier2.supplier, province },
+      lines: [{ description: 'Printing', lineTotal: '200.00', taxStatus: 'taxable' }],
+      subtotal: '200.00',
+      taxes: [{ type, rate, taxableAmount: '200.00', amount: (2 * rate).toFixed(2) }],
+      total: (200 + 2 * rate).toFixed(2),
+    });
+
+  it('warns when an Ontario supplier charges GST only', () => {
+    const report = inProvince('ON', 'GST', 5);
+    expect(findings(report)).toEqual(['CA-RATE-004']);
+    expect(report.ok).toBe(true); // place of supply can be another province
+    expect(byRule(report, 'CA-RATE-004')).toEqual([
+      expect.objectContaining({
+        severity: 'warning',
+        field: 'taxes[0].rate',
+        message:
+          'The supplier is in Ontario, where the HST rate on 2026-04-02 was 13%, but GST is charged at 5%. GST alone is right only if the supply was made in a province or territory without HST; confirm place of supply.',
+      }),
+    ]);
+  });
+
+  it("warns when a Nova Scotia supplier still charges 15% after the cut (another province's rate)", () => {
+    const report = inProvince('NS', 'HST', 15);
+    expect(findings(report)).toEqual(['CA-RATE-004']);
+    expect(byRule(report, 'CA-RATE-004')[0]?.message).toBe(
+      'The supplier is in Nova Scotia, where the HST rate on 2026-04-02 was 14%, but HST is charged at 15%. 15% was the HST rate in New Brunswick, Newfoundland and Labrador, and Prince Edward Island, so it is right only if the supply was made in one of those provinces; confirm place of supply.',
+    );
+  });
+
+  it('warns when a GST-only supplier charges HST, naming the one province with that rate', () => {
+    const [issue] = byRule(inProvince('AB', 'HST', 13), 'CA-RATE-004');
+    expect(issue?.message).toBe(
+      'The supplier is in Alberta, where only GST (5%) applied on 2026-04-02, but HST is charged at 13%. 13% was the HST rate in Ontario, so it is right only if the supply was made there; confirm place of supply.',
+    );
+  });
+
+  it("is silent when the rate is the province's own", () => {
+    for (const [province, type, rate] of [
+      ['ON', 'HST', 13],
+      ['NS', 'HST', 14],
+      ['NB', 'HST', 15],
+      ['AB', 'GST', 5],
+      ['QC', 'GST', 5],
+    ] as const) {
+      expect(findings(inProvince(province, type, rate)), province).toEqual([]);
+    }
+  });
+
+  it("accepts the old and new rate near a change in the supplier's own province", () => {
+    expect(findings(inProvince('NS', 'HST', 15, '2025-04-10'))).toEqual([]); // 9 days after
+    expect(findings(inProvince('NS', 'HST', 15, '2025-03-31'))).toEqual([]); // still 15%
+    // Outside the window it is a place-of-supply question again.
+    expect(findings(inProvince('NS', 'HST', 15, '2025-06-01'))).toEqual(['CA-RATE-004']);
+  });
+
+  it('leaves a rate in force nowhere to CA-RATE-001/002', () => {
+    expect(findings(inProvince('AB', 'GST', 7))).toEqual(['CA-RATE-001']);
+    expect(findings(inProvince('NS', 'HST', 14, '2025-01-15'))).toEqual(['CA-RATE-002']);
+    expect(findings(inProvince('NS', 'HST', 14, '2025-03-20'))).toEqual(['CA-RATE-002']); // warning
+  });
+
+  it('is silent without a supplier province, a date, or rate coverage', () => {
+    const { province: _p, ...noProvince } = tier2.supplier ?? {};
+    expect(findings(check({ ...hstInvoice(15, '2026-04-02'), supplier: noProvince }))).toEqual([]);
+    const { issueDate: _d, ...noDate } = tier2;
+    expect(
+      byRule(
+        check({ ...noDate, taxes: [{ type: 'GST', rate: 5, amount: '11.06' }] }),
+        'CA-RATE-004',
+      ),
+    ).toEqual([]);
+    expect(findings(inProvince('ON', 'GST', 5, '2016-06-01'))).toEqual([]);
+  });
+
+  it('ignores PST and QST lines', () => {
+    const report = check({
+      ...tier2,
+      supplier: { ...tier2.supplier, province: 'QC' },
+      lines: [{ description: 'Translation', lineTotal: '500.00', taxStatus: 'taxable' }],
+      subtotal: '500.00',
+      taxes: [
+        { type: 'GST', rate: 5, taxableAmount: '500.00', amount: '25.00' },
+        { type: 'QST', rate: '9.975', taxableAmount: '500.00', amount: '49.88' },
+      ],
+      total: '574.88',
+    });
+    expect(byRule(report, 'CA-RATE-004')).toEqual([]);
+  });
+
+  it('uses the tax date (the earlier payment date)', () => {
+    const report = check({
+      ...hstInvoice(15, '2025-07-01'),
+      supplier: { ...tier2.supplier, province: 'NS' },
+      taxPaidDate: '2025-03-15',
+    });
+    expect(findings(report)).toEqual([]); // 15% was Nova Scotia's rate on 2025-03-15
+  });
+});
+
+describe('CA-RATE-004 on a tax-included statement ("HST 15% included")', () => {
+  const included = (province: Province | undefined, rate: number, issueDate = '2026-09-01') =>
+    check({
+      ...tier2,
+      issueDate,
+      supplier: {
+        name: 'Supplier Inc.',
+        gstHstNumber: '812345676RT0001',
+        ...(province === undefined ? {} : { province }),
+      },
+      lines: [{ description: 'Detailing', lineTotal: '230.00', taxStatus: 'taxable' }],
+      subtotal: '230.00',
+      taxes: [],
+      taxIncludedStatement: { included: true, rate },
+      total: '230.00',
+    });
+  const rate004 = (report: ReturnType<typeof check>) => byRule(report, 'CA-RATE-004');
+
+  it("warns when a Nova Scotia supplier states another province's HST rate", () => {
+    const report = included('NS', 15);
+    expect(findings(report)).toEqual(['CA-RATE-004']);
+    expect(rate004(report)).toEqual([
+      expect.objectContaining({
+        severity: 'warning',
+        field: 'taxIncludedStatement.rate',
+        message:
+          'The supplier is in Nova Scotia, where the HST rate on 2026-09-01 was 14%, but the invoice says tax is included at 15%. 15% was the HST rate in New Brunswick, Newfoundland and Labrador, and Prince Edward Island, so it is right only if the supply was made in one of those provinces; confirm place of supply.',
+      }),
+    ]);
+    expect(rate004(included('NS', 13))[0]?.message).toContain(
+      '13% was the HST rate in Ontario, so it is right only if the supply was made there',
+    );
+  });
+
+  it('warns when an HST-province supplier states GST alone', () => {
+    expect(rate004(included('ON', 5))[0]?.message).toBe(
+      'The supplier is in Ontario, where the HST rate on 2026-09-01 was 13%, but the invoice says tax is included at 5%. 5% is GST alone, which is right only if the supply was made in a province or territory without HST; confirm place of supply.',
+    );
+  });
+
+  it("is silent for the province's own rate and inside the transition window", () => {
+    expect(findings(included('NS', 14))).toEqual([]);
+    expect(findings(included('ON', 13))).toEqual([]);
+    expect(findings(included('BC', 5))).toEqual([]);
+    expect(findings(included('NS', 15, '2025-04-10'))).toEqual([]);
+  });
+
+  it('notes, without warning, a rate that is no GST or HST rate (it may include PST or QST)', () => {
+    const report = included('BC', 12);
+    expect(findings(report)).toEqual([]);
+    expect(rate004(report)).toEqual([
+      expect.objectContaining({
+        severity: 'info',
+        message:
+          "Didn't compare the tax-included rate of 12% with British Columbia's rate: 12% wasn't a GST or HST rate on 2026-09-01, so it may include provincial sales tax.",
+      }),
+    ]);
+  });
+
+  it('is silent without a supplier province', () => {
+    expect(rate004(included(undefined, 15))).toEqual([]);
   });
 });
