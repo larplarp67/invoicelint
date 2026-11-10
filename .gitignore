@@ -6,3 +6,4 @@ coverage/
 .DS_Store
 node_modules
 test/fixtures/peppol/*.xml
+docs/drafts/
