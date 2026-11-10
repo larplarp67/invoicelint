@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "CAT-58",
+  "issueDate": "2026-10-22",
+  "supplier": {
+    "name": "Two Forks Catering",
+    "gstHstNumber": "844556670RT0001",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Sandwich platters (x4)",
+      "lineTotal": "400.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "400.00",
+      "amount": "52.00"
+    }
+  ],
+  "subtotal": "400.00",
+  "total": "462.00"
+}

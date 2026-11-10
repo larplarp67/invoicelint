@@ -1,0 +1,27 @@
+{
+  "invoiceNumber": "INV-0001942",
+  "issueDate": "2026-11-01",
+  "currency": "USD",
+  "supplier": {
+    "name": "Loopwise Analytics Inc.",
+    "gstHstNumber": "899001127RT0001",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Pro plan, monthly",
+      "lineTotal": "49.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "49.00",
+      "amount": "6.37"
+    }
+  ],
+  "subtotal": "49.00",
+  "total": "55.37"
+}

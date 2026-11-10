@@ -1,0 +1,25 @@
+{
+  "invoiceNumber": "K-3",
+  "issueDate": "2026-11-04",
+  "supplier": {
+    "name": "Keystone Locksmith",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Rekey front door lock",
+      "lineTotal": "99.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "99.00",
+      "amount": "12.87"
+    }
+  ],
+  "subtotal": "99.00",
+  "total": "111.87"
+}

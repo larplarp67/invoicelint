@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "L-44",
+  "issueDate": "2026-06-12",
+  "supplier": {
+    "name": "Green Thumb Landscaping",
+    "gstHstNumber": "811223346",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Spring cleanup and mulch",
+      "lineTotal": "200.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "200.00",
+      "amount": "26.00"
+    }
+  ],
+  "subtotal": "200.00",
+  "total": "226.00"
+}

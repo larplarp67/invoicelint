@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "P-101",
+  "issueDate": "2026-10-10",
+  "supplier": {
+    "name": "Dave's Plumbing",
+    "gstHstNumber": "799001128RT0001",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Replace hot water tank valve + 3h labour",
+      "lineTotal": "600.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "600.00",
+      "amount": "78.00"
+    }
+  ],
+  "subtotal": "600.00",
+  "total": "678.00"
+}

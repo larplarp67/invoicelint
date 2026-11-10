@@ -1,0 +1,30 @@
+{
+  "invoiceNumber": "R-88123",
+  "issueDate": "2026-11-03",
+  "supplier": {
+    "name": "Bean There Café",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Oat latte (large)",
+      "lineTotal": "6.50",
+      "taxStatus": "taxable"
+    },
+    {
+      "description": "Almond croissant",
+      "lineTotal": "6.50",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "13.00",
+      "amount": "1.69"
+    }
+  ],
+  "subtotal": "13.00",
+  "total": "14.69"
+}

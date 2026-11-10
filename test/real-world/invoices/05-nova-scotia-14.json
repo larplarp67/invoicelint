@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "HFX-90",
+  "issueDate": "2026-10-05",
+  "supplier": {
+    "name": "Harbour Print Shop",
+    "gstHstNumber": "733001192RT0001",
+    "province": "NS"
+  },
+  "lines": [
+    {
+      "description": "500 business cards, 2-sided",
+      "lineTotal": "150.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 14,
+      "taxableAmount": "150.00",
+      "amount": "21.00"
+    }
+  ],
+  "subtotal": "150.00",
+  "total": "171.00"
+}

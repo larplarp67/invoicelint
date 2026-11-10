@@ -1,0 +1,17 @@
+{
+  "invoiceNumber": "PH-3",
+  "issueDate": "2026-10-03",
+  "supplier": {
+    "name": "Silver Frame Photography",
+    "gstHstNumber": "944556679RT0001",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Headshot session + 5 edited photos",
+      "lineTotal": "250.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "total": "250.00"
+}

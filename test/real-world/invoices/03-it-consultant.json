@@ -1,0 +1,39 @@
+{
+  "invoiceNumber": "NS-1107",
+  "issueDate": "2026-11-01",
+  "supplier": {
+    "name": "Northshore IT Consulting Inc.",
+    "gstHstNumber": "800112237RT0001",
+    "province": "ON"
+  },
+  "buyer": {
+    "name": "Grand River Dental Clinic"
+  },
+  "paymentTerms": "Net 30",
+  "lines": [
+    {
+      "description": "Network setup, 20 hours @ $100/h",
+      "quantity": 20,
+      "unitPrice": "100.00",
+      "lineTotal": "2000.00",
+      "taxStatus": "taxable"
+    },
+    {
+      "description": "Ubiquiti access points (x5)",
+      "quantity": 5,
+      "unitPrice": "100.00",
+      "lineTotal": "500.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "2500.00",
+      "amount": "325.00"
+    }
+  ],
+  "subtotal": "2500.00",
+  "total": "2825.00"
+}

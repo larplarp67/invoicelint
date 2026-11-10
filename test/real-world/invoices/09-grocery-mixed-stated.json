@@ -1,0 +1,36 @@
+{
+  "invoiceNumber": "G-77810",
+  "issueDate": "2026-11-02",
+  "supplier": {
+    "name": "FreshCart Grocers",
+    "gstHstNumber": "777889908RT0001",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Basic groceries (produce, dairy, bread)",
+      "lineTotal": "110.00",
+      "taxStatus": "zero-rated"
+    },
+    {
+      "description": "Paper towels and dish soap",
+      "lineTotal": "30.00",
+      "taxStatus": "taxable"
+    },
+    {
+      "description": "Sparkling water (24 pack)",
+      "lineTotal": "20.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "50.00",
+      "amount": "6.50"
+    }
+  ],
+  "subtotal": "160.00",
+  "total": "166.50"
+}

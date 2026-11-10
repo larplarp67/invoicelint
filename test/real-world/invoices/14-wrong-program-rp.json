@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "C-210",
+  "issueDate": "2026-05-05",
+  "supplier": {
+    "name": "CleanSweep Office Cleaning",
+    "gstHstNumber": "833445562RP0001",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Office cleaning, May",
+      "lineTotal": "100.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "100.00",
+      "amount": "13.00"
+    }
+  ],
+  "subtotal": "100.00",
+  "total": "113.00"
+}

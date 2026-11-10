@@ -3,3 +3,5 @@ coverage
 pnpm-lock.yaml
 schema
 docs/rules.md
+# Real-world test invoices, kept byte-for-byte as received (some are deliberately malformed).
+test/real-world

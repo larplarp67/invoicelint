@@ -1,0 +1,20 @@
+{
+  "invoiceNumber": "SPA-8",
+  "issueDate": "2026-10-15",
+  "supplier": {
+    "name": "Stillwater Massage Therapy",
+    "gstHstNumber": "933445561RT0001",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Massage therapy package (3 x 60 min)",
+      "lineTotal": "300.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxIncludedStatement": {
+    "included": true
+  },
+  "total": "300.00"
+}

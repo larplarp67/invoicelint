@@ -1,0 +1,35 @@
+{
+  "invoiceNumber": "V-1",
+  "issueDate": "2026-09-09",
+  "supplier": {
+    "name": "Vague Ventures Consulting",
+    "gstHstNumber": "911223345RT0001",
+    "province": "ON"
+  },
+  "buyer": {
+    "name": "Riverbend Bakery"
+  },
+  "paymentTerms": "Net 30",
+  "lines": [
+    {
+      "description": "services",
+      "lineTotal": "700.00",
+      "taxStatus": "taxable"
+    },
+    {
+      "description": "x",
+      "lineTotal": "100.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "800.00",
+      "amount": "104.00"
+    }
+  ],
+  "subtotal": "800.00",
+  "total": "904.00"
+}

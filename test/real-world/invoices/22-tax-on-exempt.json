@@ -1,0 +1,30 @@
+{
+  "invoiceNumber": "RENT-11",
+  "issueDate": "2026-11-01",
+  "supplier": {
+    "name": "Laurier Properties",
+    "gstHstNumber": "900112236RT0001",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Residential rent, November, unit 4B",
+      "lineTotal": "1200.00",
+      "taxStatus": "exempt"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "1200.00",
+      "amount": "156.00"
+    }
+  ],
+  "subtotal": "1200.00",
+  "total": "1356.00",
+  "buyer": {
+    "name": "Jordan Lee"
+  },
+  "paymentTerms": "Due on the 1st"
+}

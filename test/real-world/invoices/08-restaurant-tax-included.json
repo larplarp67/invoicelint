@@ -1,0 +1,21 @@
+{
+  "invoiceNumber": "T12-4471",
+  "issueDate": "2026-10-31",
+  "supplier": {
+    "name": "The Lazy Walrus Pub",
+    "gstHstNumber": "766778898RT0001",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Team lunch (6 people)",
+      "lineTotal": "120.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxIncludedStatement": {
+    "included": true,
+    "rate": 13
+  },
+  "total": "120.00"
+}

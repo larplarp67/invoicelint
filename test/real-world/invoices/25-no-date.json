@@ -1,0 +1,24 @@
+{
+  "invoiceNumber": "0042",
+  "supplier": {
+    "name": "Farmers Market Woodworks",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Maple cutting board",
+      "lineTotal": "40.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "40.00",
+      "amount": "5.20"
+    }
+  ],
+  "subtotal": "40.00",
+  "total": "45.20"
+}

@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "E-1",
+  "issueDate": "2026-10-12",
+  "supplier": {
+    "name": "Edge Case Electronics",
+    "gstHstNumber": "955667787RT0001",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Bluetooth speaker",
+      "lineTotal": "99.99",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "99.99",
+      "amount": "12.99"
+    }
+  ],
+  "subtotal": "99.99",
+  "total": "112.98"
+}

@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "TUT-9",
+  "issueDate": "2026-09-30",
+  "supplier": {
+    "name": "Math Mentors Waterloo",
+    "gstHstNumber": "822344454RT0001",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Calculus tutoring, 3 sessions",
+      "lineTotal": "150.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "150.00",
+      "amount": "19.50"
+    }
+  ],
+  "subtotal": "150.00",
+  "total": "169.50"
+}

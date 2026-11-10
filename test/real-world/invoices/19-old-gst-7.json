@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "OLD-1",
+  "issueDate": "2026-04-14",
+  "supplier": {
+    "name": "Prairie Sign Co.",
+    "gstHstNumber": "877889907RT0001",
+    "province": "AB"
+  },
+  "lines": [
+    {
+      "description": "Vinyl storefront sign",
+      "lineTotal": "200.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "GST",
+      "rate": 7,
+      "taxableAmount": "200.00",
+      "amount": "14.00"
+    }
+  ],
+  "subtotal": "200.00",
+  "total": "214.00"
+}

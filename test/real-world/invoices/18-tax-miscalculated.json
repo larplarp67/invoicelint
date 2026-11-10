@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "Q-7",
+  "issueDate": "2026-08-08",
+  "supplier": {
+    "name": "QuickFix Phone Repair",
+    "gstHstNumber": "866778897RT0001",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "iPhone screen replacement",
+      "lineTotal": "100.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "100.00",
+      "amount": "15.00"
+    }
+  ],
+  "subtotal": "100.00",
+  "total": "115.00"
+}

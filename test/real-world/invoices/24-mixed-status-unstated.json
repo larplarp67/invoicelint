@@ -1,0 +1,30 @@
+{
+  "invoiceNumber": "RX-5521",
+  "issueDate": "2026-10-27",
+  "supplier": {
+    "name": "Uptown Pharmacy",
+    "gstHstNumber": "922334453RT0001",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Prescription (amoxicillin)",
+      "lineTotal": "54.00",
+      "taxStatus": "zero-rated"
+    },
+    {
+      "description": "Electric toothbrush",
+      "lineTotal": "200.00"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "200.00",
+      "amount": "26.00"
+    }
+  ],
+  "subtotal": "254.00",
+  "total": "280.00"
+}

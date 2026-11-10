@@ -1,0 +1,31 @@
+{
+  "invoiceNumber": "W-12",
+  "issueDate": "2026-10-01",
+  "supplier": {
+    "name": "Pixel Pushers Web",
+    "gstHstNumber": "855667788RT0001",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Landing page",
+      "lineTotal": "250.00",
+      "taxStatus": "taxable"
+    },
+    {
+      "description": "Hosting setup",
+      "lineTotal": "100.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 13,
+      "taxableAmount": "360.00",
+      "amount": "46.80"
+    }
+  ],
+  "subtotal": "360.00",
+  "total": "406.80"
+}

@@ -1,0 +1,4 @@
+{"invoiceNumber":"M-1","issueDate":"2026-10-01","supplier":{"name":"Big Ticket Builders","gstHstNumber":"712 345 602 rt 0001","province":"ON"},
+ "buyer":{"name":"Hespeler Hardware"},"paymentTerms":"Net 30",
+ "lines":[{"description":"Warehouse shelving install","lineTotal":"12,500.00","taxStatus":"taxable"}],
+ "taxes":[{"type":"HST","rate":13,"taxableAmount":"12,500.00","amount":1625}],"subtotal":"12,500.00","total":"14,125.00"}

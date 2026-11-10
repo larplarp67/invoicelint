@@ -1,0 +1,36 @@
+{
+  "invoiceNumber": "MTL-2026-17",
+  "issueDate": "2026-07-02",
+  "supplier": {
+    "name": "Traductions Lefebvre",
+    "gstHstNumber": "755667789RT0001",
+    "province": "QC"
+  },
+  "buyer": {
+    "name": "Maple Leaf Games Inc."
+  },
+  "paymentTerms": "Net 15",
+  "lines": [
+    {
+      "description": "French translation of game UI strings (4,000 words)",
+      "lineTotal": "500.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "GST",
+      "rate": 5,
+      "taxableAmount": "500.00",
+      "amount": "25.00"
+    },
+    {
+      "type": "QST",
+      "rate": 9.975,
+      "taxableAmount": "500.00",
+      "amount": "49.88"
+    }
+  ],
+  "subtotal": "500.00",
+  "total": "574.88"
+}

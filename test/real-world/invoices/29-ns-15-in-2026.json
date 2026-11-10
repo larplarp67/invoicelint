@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "NS-LATE",
+  "issueDate": "2026-09-01",
+  "supplier": {
+    "name": "Dartmouth Auto Detailing",
+    "gstHstNumber": "966778896RT0001",
+    "province": "NS"
+  },
+  "lines": [
+    {
+      "description": "Full interior detail",
+      "lineTotal": "200.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 15,
+      "taxableAmount": "200.00",
+      "amount": "30.00"
+    }
+  ],
+  "subtotal": "200.00",
+  "total": "230.00"
+}

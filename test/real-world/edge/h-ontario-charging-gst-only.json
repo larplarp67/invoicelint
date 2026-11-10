@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "ON-GST",
+  "issueDate": "2026-10-28",
+  "supplier": {
+    "name": "Priya Lal Design",
+    "gstHstNumber": "712345602RT0001",
+    "province": "ON"
+  },
+  "lines": [
+    {
+      "description": "Logo design package (3 concepts, 2 revisions)",
+      "lineTotal": "300.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "GST",
+      "rate": 5,
+      "taxableAmount": "300.00",
+      "amount": "15.00"
+    }
+  ],
+  "subtotal": "300.00",
+  "total": "315.00"
+}

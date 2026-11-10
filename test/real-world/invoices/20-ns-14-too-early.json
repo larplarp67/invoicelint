@@ -1,0 +1,26 @@
+{
+  "invoiceNumber": "NS-EARLY",
+  "issueDate": "2025-02-01",
+  "supplier": {
+    "name": "Lunenburg Marine Supply",
+    "gstHstNumber": "888990017RT0001",
+    "province": "NS"
+  },
+  "lines": [
+    {
+      "description": "Boat cover",
+      "lineTotal": "300.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "HST",
+      "rate": 14,
+      "taxableAmount": "300.00",
+      "amount": "42.00"
+    }
+  ],
+  "subtotal": "300.00",
+  "total": "342.00"
+}

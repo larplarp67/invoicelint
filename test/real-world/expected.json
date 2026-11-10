@@ -1,0 +1,187 @@
+[
+  {
+    "file": "01-coffee-receipt.json",
+    "desc": "Coffee shop receipt, $14.69, Ontario (tier 1, no GST number needed)",
+    "expect": []
+  },
+  {
+    "file": "02-freelance-designer.json",
+    "desc": "Freelance logo design, $339, Ontario (tier 2)",
+    "expect": []
+  },
+  {
+    "file": "03-it-consultant.json",
+    "desc": "IT consulting, $2,825, Ontario (tier 3, everything present)",
+    "expect": []
+  },
+  {
+    "file": "04-alberta-gst.json",
+    "desc": "Alberta contractor, GST only, $525 (tier 3)",
+    "expect": []
+  },
+  {
+    "file": "05-nova-scotia-14.json",
+    "desc": "Nova Scotia at the new 14% HST, dated 2026 (tier 2)",
+    "expect": []
+  },
+  {
+    "file": "06-bc-gst-pst.json",
+    "desc": "BC bike shop, GST 5% + PST 7%, $112 (tier 2)",
+    "expect": []
+  },
+  {
+    "file": "07-quebec-gst-qst.json",
+    "desc": "Quebec translator, GST + QST (9.975%), $574.88 (tier 3)",
+    "expect": []
+  },
+  {
+    "file": "08-restaurant-tax-included.json",
+    "desc": "Restaurant bill, 'total includes HST 13%', $120 (tier 2)",
+    "expect": []
+  },
+  {
+    "file": "09-grocery-mixed-stated.json",
+    "desc": "Grocery order: zero-rated food + taxable items, statuses stated, $166.50 (tier 2)",
+    "expect": []
+  },
+  {
+    "file": "10-marketplace-intermediary.json",
+    "desc": "Online marketplace order: seller has no number, marketplace (intermediary) does, $226 (tier 2)",
+    "expect": []
+  },
+  {
+    "file": "11-plumber-missing-buyer-terms.json",
+    "desc": "Plumber, $678, forgot buyer name and payment terms (tier 3)",
+    "expect": [
+      "CA-ITC-020",
+      "CA-ITC-021"
+    ]
+  },
+  {
+    "file": "12-landscaper-bare-bn.json",
+    "desc": "Landscaper shows only the 9-digit Business Number, $226 (tier 2)",
+    "expect": [
+      "CA-BN-003"
+    ]
+  },
+  {
+    "file": "13-typo-gst-number.json",
+    "desc": "Tutor's GST/HST number has a one-digit typo, $169.50 (tier 2)",
+    "expect": [
+      "CA-BN-001"
+    ]
+  },
+  {
+    "file": "14-wrong-program-rp.json",
+    "desc": "Supplier printed their payroll account (RP) instead of GST/HST (RT), $113 (tier 2)",
+    "expect": [
+      "CA-BN-002"
+    ]
+  },
+  {
+    "file": "15-crosses-100-no-number.json",
+    "desc": "$99 + 13% HST = $111.87, no GST/HST number (tax pushes it into tier 2)",
+    "expect": [
+      "CA-ITC-010"
+    ]
+  },
+  {
+    "file": "16-total-wrong.json",
+    "desc": "Caterer's total doesn't add up (typed $462 instead of $452)",
+    "expect": [
+      "CA-MATH-002"
+    ]
+  },
+  {
+    "file": "17-lines-dont-sum.json",
+    "desc": "Lines add to $350 but subtotal says $360",
+    "expect": [
+      "CA-MATH-001"
+    ]
+  },
+  {
+    "file": "18-tax-miscalculated.json",
+    "desc": "HST shown as $15.00 on $100 (should be $13.00)",
+    "expect": [
+      "CA-MATH-003"
+    ]
+  },
+  {
+    "file": "19-old-gst-7.json",
+    "desc": "Template still charges the old 7% GST (Alberta)",
+    "expect": [
+      "CA-RATE-001"
+    ]
+  },
+  {
+    "file": "20-ns-14-too-early.json",
+    "desc": "14% HST dated Feb 2025, before Nova Scotia's rate cut (no province had 14% then)",
+    "expect": [
+      "CA-RATE-002"
+    ]
+  },
+  {
+    "file": "21-usd-saas.json",
+    "desc": "Canadian SaaS bills in USD",
+    "expect": [
+      "CA-CUR-001"
+    ]
+  },
+  {
+    "file": "22-tax-on-exempt.json",
+    "desc": "Tax charged on exempt services (residential rent)",
+    "expect": [
+      "CA-MATH-004"
+    ]
+  },
+  {
+    "file": "23-vague-descriptions.json",
+    "desc": "$904 invoice with descriptions 'services' and 'x' (tier 3)",
+    "expect": [
+      "CA-ITC-022"
+    ]
+  },
+  {
+    "file": "24-mixed-status-unstated.json",
+    "desc": "Pharmacy: exempt prescription + taxable items, taxable lines don't say so ($254)",
+    "expect": [
+      "CA-ITC-013"
+    ]
+  },
+  {
+    "file": "25-no-date.json",
+    "desc": "Handwritten-style receipt with no date at all ($45.20)",
+    "expect": [
+      "CA-ITC-002"
+    ]
+  },
+  {
+    "file": "26-tax-included-no-rate.json",
+    "desc": "'Taxes included' with no rate stated ($300)",
+    "expect": [
+      "CA-ITC-012"
+    ]
+  },
+  {
+    "file": "27-no-tax-shown.json",
+    "desc": "$250 invoice with no tax line and no 'tax included' statement",
+    "expect": [
+      "CA-ITC-011"
+    ]
+  },
+  {
+    "file": "28-rounding-1-cent.json",
+    "desc": "HST on $99.99 is $12.9987 → $13.00; invoice shows $12.99 (1 cent off, within default tolerance)",
+    "expect": []
+  },
+  {
+    "file": "29-ns-15-in-2026.json",
+    "desc": "Nova Scotia supplier still charging old 15% in 2026 (KNOWN LIMITATION: 15% is valid in NB/NL/PE, and the tool doesn't determine place of supply)",
+    "expect": []
+  },
+  {
+    "file": "30-near-rate-change.json",
+    "desc": "HST 15% dated 2025-04-10, ten days after NS's cut (inside the transition window)",
+    "expect": []
+  }
+]

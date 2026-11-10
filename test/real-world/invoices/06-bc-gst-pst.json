@@ -1,0 +1,32 @@
+{
+  "invoiceNumber": "V-3301",
+  "issueDate": "2026-08-20",
+  "supplier": {
+    "name": "Commercial Drive Cycles",
+    "gstHstNumber": "744556671RT0001",
+    "province": "BC"
+  },
+  "lines": [
+    {
+      "description": "Tune-up, full service",
+      "lineTotal": "100.00",
+      "taxStatus": "taxable"
+    }
+  ],
+  "taxes": [
+    {
+      "type": "GST",
+      "rate": 5,
+      "taxableAmount": "100.00",
+      "amount": "5.00"
+    },
+    {
+      "type": "PST",
+      "rate": 7,
+      "taxableAmount": "100.00",
+      "amount": "7.00"
+    }
+  ],
+  "subtotal": "100.00",
+  "total": "112.00"
+}
