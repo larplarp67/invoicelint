@@ -56,6 +56,7 @@
     "docs:rules": "node scripts/gen-rules-doc.ts",
     "check:dist": "node scripts/check-dist.ts",
     "test:peppol": "node scripts/fetch-peppol-examples.ts && vitest run test/peppol.test.ts",
+    "smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-test.ps1",
     "build": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\" && tsup",
     "dev": "tsup --watch",
     "test": "vitest run",

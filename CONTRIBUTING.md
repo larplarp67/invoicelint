@@ -23,6 +23,7 @@ Useful scripts:
 | `pnpm schema`      | Regenerate `schema/invoice.schema.json` from `src/model.ts`.                          |
 | `pnpm docs:rules`  | Regenerate `docs/rules.md` from rule metadata (CI fails if it's stale).               |
 | `pnpm test:peppol` | Download OpenPeppol's example invoices (not committed) and check they parse sensibly. |
+| `pnpm smoke`       | Test the published package from npm, as a user would (see below).                     |
 
 Try the CLI from source with `node dist/cli.js check <file>` after `pnpm build`.
 
@@ -57,6 +58,28 @@ Try the CLI from source with `node dist/cli.js check <file>` after `pnpm build`.
 - Keep commits small, with clear messages.
 - `pnpm check` and `pnpm build` must pass; CI runs them on Node 22 and 24.
 - Update `CHANGELOG.md` under "Unreleased" for user-visible changes.
+
+## Before a release or demo
+
+After `npm publish`, run the post-release smoke test. It uses the published package from npm, not your working copy, so it needs network access:
+
+```sh
+corepack pnpm smoke
+```
+
+[`scripts/smoke-test.ps1`](./scripts/smoke-test.ps1) recreates `C:\temp\invoicelint-smoke` and runs `npx invoicelint@latest` there:
+
+- `--version` and `rules`
+- `check` on a valid invoice and six broken copies generated from it, each changing one thing: a mistyped GST/HST number, a missing GST/HST number (also with `--strict`), a wrong total, GST at 7%, a $500+ invoice without a buyer, and US dollars
+- `check` on a UBL invoice and a credit note
+
+It then installs the package and calls `validate()` from an ES module. Each result is compared with the expected rule IDs and exit code. The script prints PASS/FAIL per case and a summary table, and exits non-zero if anything differs.
+
+To test another version or folder, run it directly (Windows PowerShell 5.1 or PowerShell 7):
+
+```sh
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-test.ps1 -Version 0.1.0 -Dir C:\temp\invoicelint-smoke-2
+```
 
 ## Reporting bugs
 
