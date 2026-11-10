@@ -19,6 +19,11 @@ Kept ASCII-only so Windows PowerShell 5.1 reads it correctly without a byte orde
 .PARAMETER Version
 npm version or dist-tag to test. Default: latest.
 
+.PARAMETER Package
+Path to a package tarball (from `pnpm pack`) to test instead of a version from npm, so a
+release can be smoke-tested before it is published. Its version is read from the tarball,
+and -Version is ignored. Everything else (cases, npx, npm install) is the same.
+
 .PARAMETER Dir
 Working folder, deleted and recreated. Its name must start with "invoicelint-smoke".
 Default: C:\temp\invoicelint-smoke on Windows, <temp>/invoicelint-smoke elsewhere.
@@ -28,10 +33,14 @@ corepack pnpm smoke
 
 .EXAMPLE
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-test.ps1 -Version 0.1.0
+
+.EXAMPLE
+corepack pnpm pack; powershell -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-test.ps1 -Package invoicelint-0.2.0.tgz
 #>
 param(
   [string]$Version = 'latest',
-  [string]$Dir = ''
+  [string]$Dir = '',
+  [string]$Package = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -73,7 +82,8 @@ function Add-Result([string]$Case, [string]$Expected, [string]$Actual, [bool]$Pa
 }
 
 function Invoke-Cli([string[]]$CliArgs) {
-  $out = & $npx --yes $script:pkg @CliArgs
+  if ($script:fromTarball) { $out = & $npx --yes --package $script:pkg invoicelint @CliArgs }
+  else { $out = & $npx --yes $script:pkg @CliArgs }
   [pscustomobject]@{ Text = (@($out) -join "`n"); Exit = $LASTEXITCODE }
 }
 
@@ -176,13 +186,34 @@ $libraryCases = @(
 
 # --- run -------------------------------------------------------------------------------------
 
-$resolved = @(& $npm view "invoicelint@$Version" version) | Select-Object -Last 1
-if ($LASTEXITCODE -ne 0 -or -not $resolved) {
-  Write-Host "invoicelint@$Version was not found on npm." -ForegroundColor Red
-  exit 2
+$script:fromTarball = $Package -ne ''
+if ($script:fromTarball) {
+  if (-not (Test-Path -PathType Leaf $Package)) {
+    Write-Host "Package tarball '$Package' was not found." -ForegroundColor Red
+    exit 2
+  }
+  $Package = (Resolve-Path $Package).Path
+  $manifest = @(& tar -xOf $Package package/package.json) -join "`n"
+  if ($LASTEXITCODE -ne 0 -or -not $manifest) {
+    Write-Host "Could not read package/package.json from '$Package'." -ForegroundColor Red
+    exit 2
+  }
+  $resolved = [string]($manifest | ConvertFrom-Json).version
+  # npx caches by package spec, so a rebuilt tarball at the same path could run a stale
+  # install. Name the copy after its content.
+  $hash = (Get-FileHash -Algorithm SHA256 $Package).Hash.Substring(0, 12).ToLowerInvariant()
+  $tarballName = "invoicelint-$resolved-$hash.tgz"
+  $label = "invoicelint@$resolved from $Package"
+} else {
+  $resolved = @(& $npm view "invoicelint@$Version" version) | Select-Object -Last 1
+  if ($LASTEXITCODE -ne 0 -or -not $resolved) {
+    Write-Host "invoicelint@$Version was not found on npm." -ForegroundColor Red
+    exit 2
+  }
+  $resolved = $resolved.Trim()
+  $script:pkg = "invoicelint@$resolved"
+  $label = "$script:pkg (requested: $Version)"
 }
-$resolved = $resolved.Trim()
-$script:pkg = "invoicelint@$resolved"
 
 if ((Split-Path -Leaf $Dir) -notlike 'invoicelint-smoke*') {
   Write-Host "Refusing to delete '$Dir': the folder name must start with invoicelint-smoke." -ForegroundColor Red
@@ -190,8 +221,12 @@ if ((Split-Path -Leaf $Dir) -notlike 'invoicelint-smoke*') {
 }
 if (Test-Path $Dir) { Remove-Item -Recurse -Force $Dir }
 New-Item -ItemType Directory -Force $Dir | Out-Null
+if ($script:fromTarball) {
+  $script:pkg = Join-Path $Dir $tarballName
+  Copy-Item $Package $script:pkg
+}
 
-Write-Host "invoicelint smoke test: $script:pkg (requested: $Version) in $Dir"
+Write-Host "invoicelint smoke test: $label in $Dir"
 Write-Host ''
 
 $exitCode = 0
@@ -268,6 +303,6 @@ try {
 $failed = @($results | Where-Object { $_.Result -eq 'FAIL' }).Count
 Write-Host ''
 $results | Format-Table Result, Case, Expected, Actual -AutoSize -Wrap | Out-String -Width 220 | Write-Host
-Write-Host ('{0} cases: {1} passed, {2} failed ({3}, {4})' -f $results.Count, ($results.Count - $failed), $failed, $script:pkg, $Dir)
+Write-Host ('{0} cases: {1} passed, {2} failed ({3}, {4})' -f $results.Count, ($results.Count - $failed), $failed, $label, $Dir)
 if ($failed -gt 0) { $exitCode = 1 }
 exit $exitCode

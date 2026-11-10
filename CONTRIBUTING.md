@@ -81,6 +81,16 @@ To test another version or folder, run it directly (Windows PowerShell 5.1 or Po
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-test.ps1 -Version 0.1.0 -Dir C:\temp\invoicelint-smoke-2
 ```
 
+To run the same cases on a release **before** publishing it, pack it and pass the tarball (no network access needed for the package itself, though npm still installs its dependencies):
+
+```sh
+pnpm build
+pnpm pack
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-test.ps1 -Package invoicelint-0.2.0.tgz
+```
+
+This doesn't replace the run after `npm publish`, which checks what users actually download.
+
 ## Reporting bugs
 
 Use the issue templates. For a wrong finding, include the invoice (with real names and numbers removed) and the output of `invoicelint check --format json`.
