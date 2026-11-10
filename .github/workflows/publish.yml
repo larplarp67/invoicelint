@@ -1,38 +1,97 @@
 name: Publish
 
-# Publishes invoicelint to npm when a version tag (vX.Y.Z) is pushed. It uses npm
-# trusted publishing (OIDC), so there's no NPM_TOKEN or other secret. npm trusts this
-# repository and this workflow file name (set under invoicelint > Settings > Trusted
-# publishing on npmjs.com): renaming the file breaks publishing until that's updated.
-# See "Releasing" in CONTRIBUTING.md.
+# Releases invoicelint with release-please and publishes it to npm. See "Releasing" in
+# CONTRIBUTING.md.
+#
+# On every push to main, release-please opens or updates a release PR from the
+# conventional commits since the last release. Merging that PR makes it tag the release
+# and create the GitHub release; the publish job then publishes that tag to npm. It has
+# to be in this workflow: a tag created with GITHUB_TOKEN doesn't trigger other workflows.
+#
+# npm trusted publishing (OIDC): no NPM_TOKEN or other secret. npm trusts this repository
+# and this workflow file name (invoicelint > Settings > Trusted publishing on npmjs.com),
+# so renaming the file breaks publishing until that's updated.
+#
+# Run it by hand (Actions > Publish > Run workflow) for a dry run of the publish job on
+# the chosen branch, under a version that isn't on npm: build, test, and
+# `npm publish --dry-run`, which also checks that npm accepts this workflow as a
+# trusted publisher. release-please doesn't run, and nothing is published.
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches: [main]
+  workflow_dispatch:
 
-permissions:
-  contents: read
-  id-token: write
+permissions: {}
+
+concurrency:
+  group: publish-${{ github.event_name }}
+  cancel-in-progress: false
 
 jobs:
-  publish:
+  release-please:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      # Uses release-please-config.json and .release-please-manifest.json.
+      - uses: googleapis/release-please-action@v5
+        id: release
+      - name: Name the GitHub release like the earlier ones ("invoicelint X.Y.Z")
+        if: steps.release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag_name }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --title "invoicelint $VERSION"
+
+  publish:
+    needs: release-please
+    # !cancelled() lets the dry run go ahead when release-please is skipped.
+    if: >-
+      !cancelled() &&
+      (github.event_name == 'workflow_dispatch' || needs.release-please.outputs.release_created == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' }}
+      TAG: ${{ needs.release-please.outputs.tag_name }}
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ needs.release-please.outputs.tag_name || github.sha }}
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
       - name: Tag matches the package.json version
+        if: env.DRY_RUN != 'true'
         run: |
           version="$(node -p "require('./package.json').version")"
-          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME doesn't match package.json version $version (expected v$version)."
+          if [ "$TAG" != "v$version" ]; then
+            echo "::error::Tag $TAG doesn't match package.json version $version (expected v$version)."
             exit 1
           fi
-          echo "Tag $GITHUB_REF_NAME matches package.json version $version."
+          echo "Tag $TAG matches package.json version $version."
+      # npm won't even dry-run a version that's already published, so bump package.json
+      # and VERSION in src/index.ts the way release-please does, to a prerelease that will
+      # never be published. This also checks the tests still pass after a version bump.
+      - name: 'Dry run: use a version that is not on npm'
+        if: env.DRY_RUN == 'true'
+        run: |
+          version="$(node -p "require('./package.json').version")-dryrun.${GITHUB_RUN_NUMBER}"
+          npm version "$version" --no-git-tag-version
+          sed -i -E "s/'[^']*'(; \/\/ x-release-please-version)/'$version'\1/" src/index.ts
+          grep -F "export const VERSION = '$version';" src/index.ts
       - name: npm 11.5.1 or newer (needed for trusted publishing)
         run: |
           current="$(npm --version)"
@@ -46,4 +105,19 @@ jobs:
       - run: corepack pnpm install --frozen-lockfile
       - run: corepack pnpm build
       - run: corepack pnpm test
-      - run: npm publish
+      - name: npm publish
+        if: env.DRY_RUN != 'true'
+        run: npm publish
+      # npm exchanges the workflow's OIDC token for a publish token even in a dry run, so
+      # this fails if npm doesn't accept this workflow as the trusted publisher.
+      - name: 'Dry run: npm publish --dry-run'
+        if: env.DRY_RUN == 'true'
+        run: |
+          set -o pipefail
+          npm publish --dry-run --tag dry-run --loglevel verbose 2>&1 | tee publish.log
+          if ! grep -q "oidc Successfully retrieved and set token" publish.log; then
+            grep "oidc" publish.log || true
+            echo "::error::npm didn't accept this workflow as a trusted publisher (see the oidc lines above). Check invoicelint > Settings > Trusted publishing on npmjs.com."
+            exit 1
+          fi
+          echo "npm accepted this workflow as the trusted publisher."

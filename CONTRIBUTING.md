@@ -57,27 +57,22 @@ Try the CLI from source with `node dist/cli.js check <file>` after `pnpm build`.
 
 - Keep commits small, with clear messages.
 - `pnpm check` and `pnpm build` must pass; CI runs them on Node 22 and 24.
-- Update `CHANGELOG.md` under "Unreleased" for user-visible changes.
+- Give the PR a [Conventional Commits](https://www.conventionalcommits.org/) title (or the commit, when pushing straight to main): `feat:` for something users can do or will notice, `fix:` for a bug fix, `!` after the type (`feat!:`) for a breaking change, and `docs:`, `test:`, `refactor:`, `build:`, `ci:` or `chore:` for everything else. A scope is optional: `feat(ca-gst-hst): …`. release-please writes the CHANGELOG from these titles, so write them for users, and don't edit `CHANGELOG.md` by hand.
 
 ## Releasing
 
-Releases are published to npm by [`.github/workflows/publish.yml`](./.github/workflows/publish.yml) when a version tag is pushed. It uses npm [trusted publishing](https://docs.npmjs.com/trusted-publishers), so there's no npm token to manage, and npm adds provenance to the package. Don't run `npm publish` by hand.
+[release-please](https://github.com/googleapis/release-please) makes the releases, and [`.github/workflows/publish.yml`](./.github/workflows/publish.yml) publishes them to npm with [trusted publishing](https://docs.npmjs.com/trusted-publishers): there's no npm token, and npm adds provenance. Don't bump the version, push tags or run `npm publish` by hand.
 
-1. **Bump the version** to X.Y.Z in `package.json` and in `VERSION` in `src/index.ts` (a test fails if they differ), and where the tests, snapshots and README examples show it (`pnpm test -u` updates the snapshots). If the rules changed, also bump the pack's `version` in `src/packs/ca-gst-hst/index.ts` and run `pnpm docs:rules`.
-2. **Update `CHANGELOG.md`:** move the "Unreleased" entries under `## [X.Y.Z] - YYYY-MM-DD`, and update the compare links at the bottom.
-3. **Merge to main** and wait for CI to pass.
-4. **Push the tag** from main:
+1. **Merge PRs with Conventional Commits titles** (squash-merge, so the title is the commit on main). On every push to main, release-please opens or updates a release PR, "chore(main): release X.Y.Z". It holds the next version (`feat` bumps the minor version and `fix` the patch; below 1.0, a breaking change bumps the minor too), the CHANGELOG entry, and the new version in `package.json`, `VERSION` in `src/index.ts` and `.release-please-manifest.json`.
+2. **Merge the release PR** when you want to release. release-please tags vX.Y.Z and creates the GitHub release, then the publish job checks out the tag, builds, tests and runs `npm publish`. Follow it under Actions > Publish.
 
-   ```sh
-   git tag -a vX.Y.Z -m "invoicelint X.Y.Z"
-   git push origin vX.Y.Z
-   ```
+Good to know:
 
-5. **The Publish workflow publishes it.** It fails if the tag doesn't match the `package.json` version, then installs, builds, tests and runs `npm publish`. Follow it in the repository's Actions tab.
-
-Then create the GitHub release on the tag from the CHANGELOG section, and run the smoke test below.
-
-If the workflow fails before `npm publish`, nothing was published: fix it on main, delete the tag (`git push origin :refs/tags/vX.Y.Z` and `git tag -d vX.Y.Z`), and do step 4 again. Once a version is on npm, its number can't be published again, even after an unpublish.
+- **CI doesn't run on the release PR**, because GitHub doesn't start workflows for a PR opened with `GITHUB_TOKEN`. The publish job builds and tests the tag before publishing. To run CI on the release PR anyway, close and reopen it.
+- **Rewording an entry:** edit `CHANGELOG.md` in the release PR just before merging it (release-please rewrites the PR whenever main changes). To change a squash-merged PR's entry for good, add `BEGIN_COMMIT_OVERRIDE`, the corrected title, and `END_COMMIT_OVERRIDE`, each on its own line, to that PR's description.
+- **Not bumped automatically:** the pack's `version` in `src/packs/ca-gst-hst/index.ts` (bump it in a normal PR when the rules change, then run `pnpm docs:rules`) and the version in the README's JSON output example.
+- **Dry run:** Actions > Publish > Run workflow runs the publish job on the chosen branch under a version that isn't on npm, ending in `npm publish --dry-run`, and fails if npm doesn't accept the workflow as the trusted publisher. Nothing is released or published.
+- **If publishing fails** after the GitHub release was created: for a passing problem (an npm outage), re-run the failed job. For a problem in the code, the tag can't be fixed: merge a `fix:` and release the next patch version. Once a version is on npm, its number can't be published again, even after an unpublish.
 
 ## Before a release or demo
 

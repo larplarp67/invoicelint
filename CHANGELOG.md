@@ -1,8 +1,6 @@
 # Changelog
 
-All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
-
-## [Unreleased]
+All notable changes to this project are documented here. The project uses [Semantic Versioning](https://semver.org/). From 0.3.0, [release-please](https://github.com/googleapis/release-please) writes each entry from the [Conventional Commits](https://www.conventionalcommits.org/) since the last release, with sections named as in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); unreleased changes are in the open release PR. 0.2.0 and earlier were written by hand.
 
 ## [0.2.0] - 2026-11-10
 
@@ -41,6 +39,5 @@ First release.
 - **Library** `validate()` that runs in Node and in the browser, with TSDoc on every export.
 - Generated rule reference (`docs/rules.md`), design decisions (`docs/decisions.md`), input and output documentation.
 
-[Unreleased]: https://github.com/larplarp67/invoicelint/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/larplarp67/invoicelint/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/larplarp67/invoicelint/releases/tag/v0.1.0

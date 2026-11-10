@@ -3,5 +3,8 @@ coverage
 pnpm-lock.yaml
 schema
 docs/rules.md
+# Written by release-please (its entries use * bullets and blank lines prettier would change).
+CHANGELOG.md
+.release-please-manifest.json
 # Real-world test invoices, kept byte-for-byte as received (some are deliberately malformed).
 test/real-world

@@ -14,8 +14,11 @@ import { parseJsonInvoice } from './parsers/json.ts';
 import { parseUblInvoice } from './parsers/ubl.ts';
 import { DEFAULT_MAX_XML_BYTES } from './parsers/xml.ts';
 
-/** Keep in step with package.json; test/smoke.test.ts fails if they differ. */
-export const VERSION = '0.2.0';
+/**
+ * Keep in step with package.json; test/smoke.test.ts fails if they differ. release-please
+ * bumps both (the comment marks the line for it, see release-please-config.json).
+ */
+export const VERSION = '0.2.0'; // x-release-please-version
 
 /** Input formats `validate()` can parse. */
 export type InputFormat = 'json' | 'ubl';
