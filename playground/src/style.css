@@ -92,6 +92,26 @@ a {
   padding: 16px 24px 12px;
 }
 
+.site-header__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+.links {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.version {
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
 .brand {
   margin: 0;
   font-size: 22px;
@@ -165,8 +185,16 @@ a {
   font-size: 12px;
 }
 
-.button {
+.pane__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   margin-left: auto;
+}
+
+.button,
+.select {
   padding: 4px 12px;
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -177,16 +205,36 @@ a {
   cursor: pointer;
 }
 
-.button:hover {
+.select {
+  max-width: 100%;
+  padding-right: 8px;
+}
+
+.button:hover:not(:disabled),
+.select:hover {
   border-color: var(--muted);
 }
 
-.notice {
+.button:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.notice,
+.hint {
   margin: 0;
   padding: 8px 12px;
+  font-size: 13px;
+}
+
+.notice {
   background: var(--error-bg);
   color: var(--error);
-  font-size: 13px;
+}
+
+.hint {
+  background: var(--info-bg);
+  color: var(--info);
 }
 
 /* Editor */
@@ -234,15 +282,23 @@ a {
   display: flex;
 }
 
+.editor-foot {
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .privacy {
   display: flex;
   align-items: center;
   gap: 6px;
   margin: 0;
-  padding: 8px 12px;
-  border-top: 1px solid var(--border);
-  color: var(--muted);
-  font-size: 13px;
+}
+
+.share-note {
+  margin: 2px 0 0 20px;
+  font-size: 12px;
 }
 
 .privacy__icon {
@@ -385,6 +441,33 @@ details.group > summary {
 .issue__field {
   color: var(--muted);
   font-size: 13px;
+}
+
+/* An issue whose field can be selected in the editor. */
+
+.issue--linked {
+  cursor: pointer;
+}
+
+.issue--linked:hover {
+  border-color: var(--muted);
+  border-left-color: var(--sev);
+}
+
+.issue__show {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.issue__show:hover {
+  text-decoration-style: solid;
 }
 
 .issue__message {

@@ -13,7 +13,14 @@
   </head>
   <body>
     <header class="site-header">
-      <h1 class="brand">invoicelint <span class="brand__tag">playground</span></h1>
+      <div class="site-header__top">
+        <h1 class="brand">invoicelint <span class="brand__tag">playground</span></h1>
+        <nav class="links" aria-label="invoicelint">
+          <a href="https://github.com/larplarp67/invoicelint">GitHub</a>
+          <a href="https://www.npmjs.com/package/invoicelint">npm</a>
+          <a id="version" class="version" title="Library version: release notes" hidden></a>
+        </nav>
+      </div>
       <p class="pitch">
         Check a Canadian invoice for what a buyer needs to claim GST/HST input tax credits, and
         whether the tax math and rates are right.
@@ -26,7 +33,15 @@
           <h2 id="editor-title" class="pane__title">Invoice</h2>
           <span id="format" class="chip" title="Detected format"></span>
           <span id="file-name" class="file-name"></span>
-          <button type="button" id="open" class="button">Open file</button>
+          <div class="pane__actions">
+            <select id="examples" class="select" aria-label="Try an example">
+              <option value="" disabled selected>Try an example…</option>
+            </select>
+            <button type="button" id="open" class="button">Open file</button>
+            <button type="button" id="share" class="button" aria-describedby="share-note">
+              Copy share link
+            </button>
+          </div>
           <input
             type="file"
             id="file"
@@ -35,6 +50,7 @@
           />
         </div>
         <p id="notice" class="notice" role="alert" hidden></p>
+        <p id="hint" class="hint" role="status" hidden></p>
         <div class="editor-wrap">
           <textarea
             id="editor"
@@ -49,14 +65,19 @@
           ></textarea>
           <div class="drop-overlay" aria-hidden="true">Drop a .json or .xml invoice</div>
         </div>
-        <p id="privacy" class="privacy">
-          <svg class="privacy__icon" viewBox="0 0 16 16" aria-hidden="true">
-            <path
-              d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2h.5a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h.5Zm1.5 0h4V5a2 2 0 1 0-4 0v2Z"
-            />
-          </svg>
-          Runs entirely in your browser. Your invoice never leaves this page.
-        </p>
+        <div class="editor-foot">
+          <p id="privacy" class="privacy">
+            <svg class="privacy__icon" viewBox="0 0 16 16" aria-hidden="true">
+              <path
+                d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2h.5a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h.5Zm1.5 0h4V5a2 2 0 1 0-4 0v2Z"
+              />
+            </svg>
+            Runs entirely in your browser. Your invoice never leaves this page.
+          </p>
+          <p id="share-note" class="share-note">
+            A share link contains the invoice itself, so anyone who has the link can read it.
+          </p>
+        </div>
       </section>
 
       <section class="pane pane--results" aria-labelledby="results-title">

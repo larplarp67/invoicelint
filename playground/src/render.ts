@@ -33,7 +33,14 @@ const GROUP_TITLE: Record<Severity, string> = {
   info: 'Info',
 };
 
-function renderIssue(issue: Issue): HTMLLIElement {
+/** Selects an issue's field in the editor. Absent for UBL, where fields aren't places in the text. */
+export interface FieldLink {
+  /** Whether this field can be shown (it parses, and the editor holds valid JSON). */
+  canShow: (field: string) => boolean;
+  show: (field: string) => void;
+}
+
+function renderIssue(issue: Issue, link: FieldLink | undefined): HTMLLIElement {
   const label = fieldLabel(issue.field);
   const head = h('div', { className: 'issue__head' }, [
     h('span', {
@@ -43,12 +50,41 @@ function renderIssue(issue: Issue): HTMLLIElement {
     }),
     h('code', { className: 'issue__rule', text: issue.ruleId }),
   ]);
-  if (label !== '') head.append(h('span', { className: 'issue__field', text: label }));
+  const linked = link !== undefined && issue.field !== '' && link.canShow(issue.field);
+  if (linked) {
+    // A real button for keyboard and screen reader users; a click anywhere on the card works too.
+    head.append(
+      h('button', {
+        className: 'issue__field issue__show',
+        text: label === '' ? issue.field : label,
+        attrs: {
+          type: 'button',
+          // The JSON path, for people editing the invoice by hand.
+          title: issue.field,
+          'aria-label': `Show ${label === '' ? issue.field : label} in the editor`,
+        },
+      }),
+    );
+  } else if (label !== '') {
+    head.append(h('span', { className: 'issue__field', text: label }));
+  }
 
   const item = h('li', { className: `issue issue--${issue.severity}` }, [
     head,
     h('p', { className: 'issue__message', text: issue.message }),
   ]);
+  if (linked) {
+    item.classList.add('issue--linked');
+    item.addEventListener('click', (event) => {
+      if (event.target instanceof Element && event.target.closest('a') !== null) return;
+      // Don't steal a click that ends a text selection inside the card.
+      const selection = window.getSelection();
+      if (selection !== null && !selection.isCollapsed && item.contains(selection.anchorNode)) {
+        return;
+      }
+      link.show(issue.field);
+    });
+  }
   if (issue.fix !== undefined) {
     item.append(h('p', { className: 'issue__fix' }, [h('strong', { text: 'Fix: ' }), issue.fix]));
   }
@@ -58,8 +94,16 @@ function renderIssue(issue: Issue): HTMLLIElement {
   return item;
 }
 
-function renderGroup(severity: Severity, issues: Issue[]): HTMLElement {
-  const list = h('ul', { className: 'issues' }, issues.map(renderIssue));
+function renderGroup(
+  severity: Severity,
+  issues: Issue[],
+  link: FieldLink | undefined,
+): HTMLElement {
+  const list = h(
+    'ul',
+    { className: 'issues' },
+    issues.map((i) => renderIssue(i, link)),
+  );
   const title = `${GROUP_TITLE[severity]} (${issues.length})`;
   return h('section', { className: `group group--${severity}` }, [
     h('h3', { className: 'group__title', text: title }),
@@ -71,6 +115,8 @@ export interface RenderOptions {
   /** Whether the Info group starts open. */
   infoOpen: boolean;
   onInfoToggle: (open: boolean) => void;
+  /** Lets a click on an issue select its field in the editor. */
+  fieldLink?: FieldLink;
 }
 
 /** Replace the panel's contents with the outcome. */
@@ -125,12 +171,17 @@ export function renderResults(panel: HTMLElement, outcome: Outcome, options: Ren
 
   const { errors, warnings, infos } = outcome.report;
   const sections: HTMLElement[] = [summary];
-  if (errors.length > 0) sections.push(renderGroup('error', errors));
-  if (warnings.length > 0) sections.push(renderGroup('warning', warnings));
+  const link = options.fieldLink;
+  if (errors.length > 0) sections.push(renderGroup('error', errors, link));
+  if (warnings.length > 0) sections.push(renderGroup('warning', warnings, link));
   if (infos.length > 0) {
     const details = h('details', { className: 'group group--info' }, [
       h('summary', { className: 'group__title', text: `Info (${infos.length})` }),
-      h('ul', { className: 'issues' }, infos.map(renderIssue)),
+      h(
+        'ul',
+        { className: 'issues' },
+        infos.map((i) => renderIssue(i, link)),
+      ),
     ]);
     details.open = options.infoOpen;
     details.addEventListener('toggle', () => {
