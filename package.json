@@ -26,9 +26,7 @@
     "lint"
   ],
   "type": "module",
-  "sideEffects": [
-    "./playground/src/csp.ts"
-  ],
+  "sideEffects": false,
   "engines": {
     "node": ">=22.12"
   },

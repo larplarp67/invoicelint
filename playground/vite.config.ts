@@ -16,8 +16,21 @@ const CSP = [
   "form-action 'none'",
 ].join('; ');
 
+/** src/csp.ts, which main.ts imports first only for what it does on load. */
+const CSP_MODULE = /[\\/]playground[\\/]src[\\/]csp\.ts$/;
+
 export default defineConfig({
   plugins: [
+    {
+      // The root package.json says "sideEffects": false (true of the library),
+      // which would let the bundler drop `import './csp.ts'`. Marking just this
+      // module here takes precedence over package.json and touches nothing else.
+      name: 'invoicelint-keep-csp-module',
+      apply: 'build',
+      transform(code, id) {
+        return CSP_MODULE.test(id) ? { code, map: null, moduleSideEffects: true } : null;
+      },
+    },
     {
       name: 'invoicelint-csp',
       apply: 'build',

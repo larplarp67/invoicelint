@@ -49,6 +49,8 @@ let timer: ReturnType<typeof setTimeout> | undefined;
 let copiedTimer: ReturnType<typeof setTimeout> | undefined;
 let infoOpen = false;
 let lastAnnouncement = '';
+/** The editor text as last loaded (example, file or share link), to tell whether it has been edited since. */
+let loadedText = '';
 
 version.textContent = `v${VERSION}`;
 version.href = `${RELEASES_URL}/tag/v${VERSION}`;
@@ -154,6 +156,8 @@ interface LoadOptions {
 
 function load(text: string, options: LoadOptions): void {
   editor.value = text;
+  // Read back: the textarea turns \r\n into \n.
+  loadedText = editor.value;
   editor.scrollTop = 0;
   editor.scrollLeft = 0;
   fileName.textContent = options.name;
@@ -168,6 +172,11 @@ function load(text: string, options: LoadOptions): void {
 function loadExample(id: string): void {
   const example = exampleById(id);
   if (example !== undefined) load(example.text, { name: '', exampleId: example.id });
+}
+
+/** Whether the editor holds text someone typed or pasted since the last load. An empty editor has nothing to lose. */
+function hasEdits(): boolean {
+  return editor.value !== loadedText && editor.value.trim() !== '';
 }
 
 async function loadFile(file: File): Promise<void> {
@@ -244,7 +253,18 @@ editor.addEventListener('input', () => {
 });
 
 examples.addEventListener('change', () => {
-  loadExample(examples.value);
+  const example = exampleById(examples.value);
+  if (example === undefined) return;
+  if (
+    hasEdits() &&
+    !window.confirm(
+      `Replace your edited invoice with the example "${example.label}"? Your edits will be lost.`,
+    )
+  ) {
+    examples.value = '';
+    return;
+  }
+  loadExample(example.id);
 });
 
 openButton.addEventListener('click', () => {
