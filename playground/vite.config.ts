@@ -41,6 +41,9 @@ export default defineConfig({
         ),
     },
   ],
+  // GitHub Pages serves the repo's site at https://larplarp67.github.io/invoicelint/.
+  // The dev and preview servers use the same path.
+  base: '/invoicelint/',
   build: {
     target: 'es2022',
   },
