@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   // test/real-world/ is test data kept as received, including its own scripts.
-  { ignores: ['dist/', 'coverage/', 'node_modules/', 'test/real-world/'] },
+  { ignores: ['dist/', 'coverage/', 'node_modules/', 'test/real-world/', 'playground/dist/'] },
   js.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   {

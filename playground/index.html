@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>invoicelint playground</title>
+    <meta
+      name="description"
+      content="Paste or drop a Canadian invoice (JSON or UBL XML) and see what invoicelint finds: missing GST/HST input tax credit details, tax math and rates. Runs entirely in your browser."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <header class="site-header">
+      <h1 class="brand">invoicelint <span class="brand__tag">playground</span></h1>
+      <p class="pitch">
+        Check a Canadian invoice for what a buyer needs to claim GST/HST input tax credits, and
+        whether the tax math and rates are right.
+      </p>
+    </header>
+
+    <main class="workspace">
+      <section class="pane pane--editor" aria-labelledby="editor-title">
+        <div class="pane__bar">
+          <h2 id="editor-title" class="pane__title">Invoice</h2>
+          <span id="format" class="chip" title="Detected format"></span>
+          <span id="file-name" class="file-name"></span>
+          <button type="button" id="open" class="button">Open file</button>
+          <input
+            type="file"
+            id="file"
+            accept=".json,.xml,application/json,application/xml,text/xml"
+            hidden
+          />
+        </div>
+        <p id="notice" class="notice" role="alert" hidden></p>
+        <div class="editor-wrap">
+          <textarea
+            id="editor"
+            class="editor"
+            spellcheck="false"
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            wrap="off"
+            aria-labelledby="editor-title"
+            aria-describedby="privacy"
+          ></textarea>
+          <div class="drop-overlay" aria-hidden="true">Drop a .json or .xml invoice</div>
+        </div>
+        <p id="privacy" class="privacy">
+          <svg class="privacy__icon" viewBox="0 0 16 16" aria-hidden="true">
+            <path
+              d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2h.5a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h.5Zm1.5 0h4V5a2 2 0 1 0-4 0v2Z"
+            />
+          </svg>
+          Runs entirely in your browser. Your invoice never leaves this page.
+        </p>
+      </section>
+
+      <section class="pane pane--results" aria-labelledby="results-title">
+        <div class="pane__bar">
+          <h2 id="results-title" class="pane__title">Findings</h2>
+        </div>
+        <div id="results" class="results"></div>
+        <p id="live" class="visually-hidden" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
