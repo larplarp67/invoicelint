@@ -2,6 +2,8 @@
 
 **Lint Canadian invoices for the details a buyer needs to claim GST/HST input tax credits, and check that the tax math adds up.**
 
+**[Try it in your browser →](https://larplarp67.github.io/invoicelint/)**
+
 [![CI](https://github.com/larplarp67/invoicelint/actions/workflows/ci.yml/badge.svg)](https://github.com/larplarp67/invoicelint/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/invoicelint)](https://www.npmjs.com/package/invoicelint)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
