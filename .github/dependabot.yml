@@ -17,6 +17,12 @@ updates:
     groups:
       npm-minor-patch:
         update-types: [minor, patch]
+    ignore:
+      # invoicelint supports Node 22.12+, so its Node types stay on 22.x: a
+      # newer major would let code use APIs that Node 22 doesn't have. Move to
+      # a new major when the minimum Node version goes up.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     directory: /
