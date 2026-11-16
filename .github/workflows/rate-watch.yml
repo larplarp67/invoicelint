@@ -1,0 +1,58 @@
+name: Rate watch
+
+# Once a month, checks whether the CRA's GST/HST rate tables or SOR/91-45 (the
+# Input Tax Credit Information Regulations) changed since
+# data/watch-snapshot.json, and opens an issue if they did. It never changes
+# rates or the snapshot: a person updates src/packs/ca-gst-hst/rates.ts and
+# runs `pnpm rate-watch --update`. If a source can't be fetched or read, the
+# run fails, and GitHub emails about the failed run.
+
+on:
+  schedule:
+    # 14:23 UTC on the 1st of each month (off the hour, when schedules are busiest).
+    - cron: '23 14 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rate-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      # The script only needs Node (it runs TypeScript directly), so no install.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Compare the sources with data/watch-snapshot.json
+        id: watch
+        run: node scripts/rate-watch.ts --report rate-watch.md
+      # One open issue at a time: a later change becomes a comment on it, and a
+      # change that's already been reported (same fingerprint) is skipped.
+      - name: Open an issue about the change
+        if: steps.watch.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Rate watch: GST/HST rates or SOR/91-45 changed"
+          marker="$(grep -o 'rate-watch:[0-9a-f]*' rate-watch.md)"
+          existing="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title $title" \
+            --json number,title --jq "map(select(.title == \"$title\")) | first | .number // empty")"
+          if [ -z "$existing" ]; then
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body-file rate-watch.md
+          elif gh issue view "$existing" --repo "$GITHUB_REPOSITORY" --json body,comments \
+            --jq '.body, .comments[].body' | grep -qF "$marker"; then
+            echo "Issue #$existing already reports this change."
+          else
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body-file rate-watch.md
+          fi

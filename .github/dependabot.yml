@@ -1,0 +1,29 @@
+# Weekly dependency updates. Minor and patch updates come as one grouped pull
+# request per ecosystem; a major update gets its own. Nothing merges itself.
+#
+# Every PR title and commit starts with "chore(deps):". release-please hides
+# chore commits, so merging a Dependabot PR never cuts an npm release; ship
+# dependency updates with the next feat: or fix:.
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      # Dependabot adds the colon. Used for dev dependencies too (no prefix-development).
+      prefix: chore(deps)
+    groups:
+      npm-minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore(deps)
+    groups:
+      actions-minor-patch:
+        update-types: [minor, patch]

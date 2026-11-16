@@ -1,0 +1,55 @@
+{
+  "cra": {
+    "url": "https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/charge-collect-which-rate/calculator.html",
+    "tables": [
+      {
+        "caption": "GST/HST and PST rates",
+        "rows": [
+          ["Province", "GST and HST", "PST"],
+          ["Alberta", "5%", "0%"],
+          ["British Columbia", "5%", "7%"],
+          ["Manitoba", "5%", "7%"],
+          ["New Brunswick", "15%", "N/A"],
+          ["Newfoundland and Labrador", "15%", "N/A"],
+          ["Northwest Territories", "5%", "0%"],
+          ["Nova Scotia", "14%", "N/A"],
+          ["Nunavut", "5%", "0%"],
+          ["Ontario", "13%", "N/A"],
+          ["Quebec", "5%", "9.975%"],
+          ["Prince Edward Island", "15%", "N/A"],
+          ["Saskatchewan", "5%", "6%"],
+          ["Yukon", "5%", "0%"]
+        ]
+      },
+      {
+        "caption": "GST/HST rates since April 1, 2013",
+        "rows": [
+          [
+            "Province",
+            "On or after April 1, 2025",
+            "October 1, 2016 to March 31, 2025",
+            "July 1, 2016 to September 30, 2016",
+            "April 1, 2013 to June 30, 2016"
+          ],
+          ["Alberta", "5%", "5%", "5%", "5%"],
+          ["British Columbia", "5%", "5%", "5%", "5%"],
+          ["Manitoba", "5%", "5%", "5%", "5%"],
+          ["New Brunswick", "15%", "15%", "13%", "13%"],
+          ["Newfoundland and Labrador", "15%", "15%", "15%", "13%"],
+          ["Northwest Territories", "5%", "5%", "5%", "5%"],
+          ["Nova Scotia", "14%", "15%", "15%", "15%"],
+          ["Nunavut", "5%", "5%", "5%", "5%"],
+          ["Ontario", "13%", "13%", "13%", "13%"],
+          ["Quebec", "5%", "5%", "5%", "5%"],
+          ["Prince Edward Island", "15%", "15%", "14%", "14%"],
+          ["Saskatchewan", "5%", "5%", "5%", "5%"],
+          ["Yukon", "5%", "5%", "5%", "5%"]
+        ]
+      }
+    ]
+  },
+  "sor9145": {
+    "url": "https://laws-lois.justice.gc.ca/eng/XML/SOR-91-45.xml",
+    "lastAmended": "2024-06-20"
+  }
+}
